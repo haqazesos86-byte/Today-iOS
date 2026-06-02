@@ -293,9 +293,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				B00300000000000000000001 /* TodayWatchApp.swift in Sources */,
-				B00300000000000000000004 /* TaskItem.swift in Sources */,
-				B00300000000000000000005 /* TaskListViewModel.swift in Sources */,
-				B00300000000000000000010 /* PersistenceService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
