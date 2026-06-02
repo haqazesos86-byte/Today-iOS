@@ -1,0 +1,594 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B00100000000000000000001 /* TodayApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00100000000000000000001; };
+		B00100000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00100000000000000000002; };
+		B00100000000000000000003 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00100000000000000000003; };
+		B00100000000000000000004 /* TaskItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00100000000000000000004; };
+		B00100000000000000000005 /* TaskListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00100000000000000000005; };
+		B00100000000000000000006 /* DateHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00100000000000000000006; };
+		B00100000000000000000007 /* TaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00100000000000000000007; };
+		B00100000000000000000008 /* DividerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00100000000000000000008; };
+		B00100000000000000000009 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00100000000000000000009; };
+		B00100000000000000000010 /* PersistenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00100000000000000000010; };
+		B00100000000000000000011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A00100000000000000000011; };
+		B00200000000000000000001 /* TodayWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00200000000000000000001; };
+		B00300000000000000000001 /* TodayWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00300000000000000000001; };
+		B00300000000000000000004 /* TaskItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00100000000000000000004; };
+		B00300000000000000000005 /* TaskListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00100000000000000000005; };
+		B00300000000000000000010 /* PersistenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00100000000000000000010; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A00100000000000000000001 /* TodayApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayApp.swift; sourceTree = "<group>"; };
+		A00100000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A00100000000000000000003 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A00100000000000000000004 /* TaskItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskItem.swift; sourceTree = "<group>"; };
+		A00100000000000000000005 /* TaskListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskListViewModel.swift; sourceTree = "<group>"; };
+		A00100000000000000000006 /* DateHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateHeaderView.swift; sourceTree = "<group>"; };
+		A00100000000000000000007 /* TaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRowView.swift; sourceTree = "<group>"; };
+		A00100000000000000000008 /* DividerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DividerView.swift; sourceTree = "<group>"; };
+		A00100000000000000000009 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		A00100000000000000000010 /* PersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceService.swift; sourceTree = "<group>"; };
+		A00100000000000000000011 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A00100000000000000000012 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A00200000000000000000001 /* TodayWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayWidget.swift; sourceTree = "<group>"; };
+		A00200000000000000000002 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A00300000000000000000001 /* TodayWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayWatchApp.swift; sourceTree = "<group>"; };
+		A00300000000000000000002 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		PR0010000000000000000001 /* Today.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Today.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		PR0020000000000000000001 /* TodayWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TodayWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		PR0030000000000000000001 /* TodayWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TodayWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FP0010000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FP0020000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FP0030000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		G00100000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				G00100000000000000000002 /* App */,
+				G00100000000000000000003 /* Models */,
+				G00100000000000000000004 /* ViewModels */,
+				G00100000000000000000005 /* Views */,
+				G00100000000000000000006 /* Services */,
+				A00100000000000000000011 /* Assets.xcassets */,
+				A00100000000000000000012 /* Info.plist */,
+				G00100000000000000000007 /* TodayWidgetExtension */,
+				G00100000000000000000008 /* TodayWatchApp */,
+				G00100000000000000000009 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		G00100000000000000000002 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				A00100000000000000000001 /* TodayApp.swift */,
+				A00100000000000000000002 /* ContentView.swift */,
+				A00100000000000000000003 /* AppDelegate.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		G00100000000000000000003 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A00100000000000000000004 /* TaskItem.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		G00100000000000000000004 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				A00100000000000000000005 /* TaskListViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		G00100000000000000000005 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A00100000000000000000006 /* DateHeaderView.swift */,
+				A00100000000000000000007 /* TaskRowView.swift */,
+				A00100000000000000000008 /* DividerView.swift */,
+				A00100000000000000000009 /* EmptyStateView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		G00100000000000000000006 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A00100000000000000000010 /* PersistenceService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		G00100000000000000000007 /* TodayWidgetExtension */ = {
+			isa = PBXGroup;
+			children = (
+				A00100000000000000000001 /* Widget */,
+				A00200000000000000000002 /* Info.plist */,
+			);
+			path = TodayWidgetExtension;
+			sourceTree = "<group>";
+		};
+		G00100000000000000000008 /* TodayWatchApp */ = {
+			isa = PBXGroup;
+			children = (
+				A00100000000000000000001 /* Watch */,
+				A00300000000000000000002 /* Info.plist */,
+			);
+			path = TodayWatchApp;
+			sourceTree = "<group>";
+		};
+		G00100000000000000000009 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				PR0010000000000000000001 /* Today.app */,
+				PR0020000000000000000001 /* TodayWidgetExtension.appex */,
+				PR0030000000000000000001 /* TodayWatchApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A00100000000000000000001 /* Widget */ = {
+			isa = PBXGroup;
+			children = (
+				A00200000000000000000001 /* TodayWidget.swift */,
+			);
+			path = Widget;
+			sourceTree = "<group>";
+		};
+		A00100000000000000000001 /* Watch */ = {
+			isa = PBXGroup;
+			children = (
+				A00300000000000000000001 /* TodayWatchApp.swift */,
+			);
+			path = Watch;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		T00100000000000000000001 /* Today */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BCL001000000000000000001;
+			buildPhases = (
+				BP0010000000000000000001 /* Sources */,
+				FP0010000000000000000001 /* Frameworks */,
+				RP0010000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				TD0010000000000000000001 /* PBXTargetDependency */,
+			);
+			name = Today;
+			productName = Today;
+			productReference = PR0010000000000000000001;
+			productType = "com.apple.product-type.application";
+		};
+		T00200000000000000000001 /* TodayWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BCL002000000000000000001;
+			buildPhases = (
+				BP0020000000000000000001 /* Sources */,
+				FP0020000000000000000001 /* Frameworks */,
+				RP0020000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TodayWidgetExtension;
+			productName = TodayWidgetExtension;
+			productReference = PR0020000000000000000001;
+			productType = "com.apple.product-type.app-extension";
+		};
+		T00300000000000000000001 /* TodayWatchApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BCL003000000000000000001;
+			buildPhases = (
+				BP0030000000000000000001 /* Sources */,
+				FP0030000000000000000001 /* Frameworks */,
+				RP0030000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TodayWatchApp;
+			productName = TodayWatchApp;
+			productReference = PR0030000000000000000001;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		PJ0010000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+			};
+			buildConfigurationList = BCLPJ000000000000000001;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = "zh-Hans";
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				"zh-Hans",
+				Base,
+			);
+			mainGroup = G00100000000000000000001;
+			productRefGroup = G00100000000000000000009 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				T00100000000000000000001 /* Today */,
+				T00200000000000000000001 /* TodayWidgetExtension */,
+				T00300000000000000000001 /* TodayWatchApp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		RP0010000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B00100000000000000000011 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		RP0020000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		RP0030000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		BP0010000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B00100000000000000000001 /* TodayApp.swift in Sources */,
+				B00100000000000000000002 /* ContentView.swift in Sources */,
+				B00100000000000000000003 /* AppDelegate.swift in Sources */,
+				B00100000000000000000004 /* TaskItem.swift in Sources */,
+				B00100000000000000000005 /* TaskListViewModel.swift in Sources */,
+				B00100000000000000000006 /* DateHeaderView.swift in Sources */,
+				B00100000000000000000007 /* TaskRowView.swift in Sources */,
+				B00100000000000000000008 /* DividerView.swift in Sources */,
+				B00100000000000000000009 /* EmptyStateView.swift in Sources */,
+				B00100000000000000000010 /* PersistenceService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BP0020000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B00200000000000000000001 /* TodayWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BP0030000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B00300000000000000000001 /* TodayWatchApp.swift in Sources */,
+				B00300000000000000000004 /* TaskItem.swift in Sources */,
+				B00300000000000000000005 /* TaskListViewModel.swift in Sources */,
+				B00300000000000000000010 /* PersistenceService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		TD0010000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = T00200000000000000000001 /* TodayWidgetExtension */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		BCD0010000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		BCD0010000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+
+		BCD0010000000000000001001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "今天";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.today.app;
+				PRODUCT_NAME = Today;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		BCD0010000000000000001002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "今天";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.today.app;
+				PRODUCT_NAME = Today;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+
+		BCD0020000000000000001001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TodayWidgetExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "今天";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.today.app.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		BCD0020000000000000001002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TodayWidgetExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "今天";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.today.app.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+
+		BCD0030000000000000001001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TodayWatchApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "今天";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.today.app.watchapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		BCD0030000000000000001002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TodayWatchApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "今天";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.today.app.watchapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		BCLPJ000000000000000001 /* Build configuration list for PBXProject "Today" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BCD0010000000000000000001 /* Debug */,
+				BCD0010000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BCL001000000000000000001 /* Build configuration list for PBXNativeTarget "Today" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BCD0010000000000000001001 /* Debug */,
+				BCD0010000000000000001002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BCL002000000000000000001 /* Build configuration list for PBXNativeTarget "TodayWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BCD0020000000000000001001 /* Debug */,
+				BCD0020000000000000001002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BCL003000000000000000001 /* Build configuration list for PBXNativeTarget "TodayWatchApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BCD0030000000000000001001 /* Debug */,
+				BCD0030000000000000001002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = PJ0010000000000000000001 /* Project object */;
+}

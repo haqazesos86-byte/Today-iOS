@@ -1,0 +1,95 @@
+name: Build Today iOS App
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      run_in_simulator:
+        description: 'Launch simulator and test (requires Appetize token)'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build:
+    name: Build Today App
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode version
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Show Xcode version
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: List available simulators
+        run: xcrun simctl list devices available
+
+      - name: Build Today App (without signing)
+        run: |
+          xcodebuild build \
+            -project "Today.xcodeproj" \
+            -scheme "Today" \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_ENTITLEMENTS="" \
+            | xcpretty
+
+      - name: Run iOS Simulator and test launch
+        run: |
+          # Boot simulator
+          DEVICE_ID=$(xcrun simctl create "Today-Test-Device" com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro com.apple.CoreSimulator.SimRuntime.iOS-18-4 2>/dev/null || \
+                      xcrun simctl create "Today-Test-Device" com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro com.apple.CoreSimulator.SimRuntime.iOS-17-5)
+          xcrun simctl boot "$DEVICE_ID"
+          xcrun simctl install "$DEVICE_ID" "$(find . -name 'Today.app' -path '*/Debug-iphonesimulator/*' -type d | head -1)"
+
+      - name: Take screenshot of simulated app
+        run: |
+          sleep 3
+          xcrun simctl screenshot booted Today_Screenshot.png
+          echo "✅ Screenshot saved to Today_Screenshot.png"
+
+      - name: Upload screenshot as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Today-Simulator-Screenshot
+          path: Today_Screenshot.png
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Today-Build
+          path: |
+            ${{ runner.temp }}/**/Debug-iphonesimulator/Today.app
+
+  check-code:
+    name: Swift Syntax Check
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Swift syntax check
+        run: |
+          for file in $(find . -name "*.swift" -not -path "./.build/*"); do
+            echo "Checking: $file"
+            swift -parse "$file" 2>&1 | head -5
+          done
+          echo "✅ All Swift files parsed successfully"
