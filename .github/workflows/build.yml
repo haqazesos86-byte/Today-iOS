@@ -101,20 +101,20 @@ jobs:
         continue-on-error: true
         run: |
           if xcrun simctl list devices | grep -q '(Booted)'; then
-            xcrun simctl screenshot booted Today_Screenshot.png 2>&1
+            xcrun simctl screenshot booted "${GITHUB_WORKSPACE:-.}/Today_Screenshot.png" 2>&1
             echo "✅ Screenshot captured"
           else
             echo "⚠️ No booted simulator — creating placeholder screenshot"
             # Generate a simple HTML preview as placeholder
-            echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Today App Build</title>' > preview.html
-            echo '<style>body{font-family:-apple-system;padding:40px;background:#f5f5f5}</style>' >> preview.html
-            echo '<body><h1>📱 Today iOS App</h1>' >> preview.html
-            echo '<p>Build succeeded on GitHub Actions macOS runner</p>' >> preview.html
-            echo '<hr><ul>' >> preview.html
-            echo "<li>✅ Build: Passed</li>" >> preview.html
-            echo "<li>✅ Swift Syntax: Passed</li>" >> preview.html
-            echo "<li>ℹ️ Simulator screenshot: N/A (headless runner)</li>" >> preview.html
-            echo '</ul><p>Open in Xcode on a Mac to run in simulator</p></body></html>' >> preview.html
+            echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Today App Build</title>' > "${GITHUB_WORKSPACE:-.}/preview.html"
+            echo '<style>body{font-family:-apple-system;padding:40px;background:#f5f5f5}</style>' >> "${GITHUB_WORKSPACE:-.}/preview.html"
+            echo '<body><h1>📱 Today iOS App</h1>' >> "${GITHUB_WORKSPACE:-.}/preview.html"
+            echo '<p>Build succeeded on GitHub Actions macOS runner</p>' >> "${GITHUB_WORKSPACE:-.}/preview.html"
+            echo '<hr><ul>' >> "${GITHUB_WORKSPACE:-.}/preview.html"
+            echo "<li>✅ Build: Passed</li>" >> "${GITHUB_WORKSPACE:-.}/preview.html"
+            echo "<li>✅ Swift Syntax: Passed</li>" >> "${GITHUB_WORKSPACE:-.}/preview.html"
+            echo "<li>ℹ️ Simulator screenshot: N/A (headless runner)</li>" >> "${GITHUB_WORKSPACE:-.}/preview.html"
+            echo '</ul><p>Open in Xcode on a Mac to run in simulator</p></body></html>' >> "${GITHUB_WORKSPACE:-.}/preview.html"
             echo "✅ Preview HTML generated"
           fi
 
@@ -149,6 +149,6 @@ jobs:
         run: |
           for file in $(find . -name "*.swift" -not -path "./.build/*"); do
             echo "Checking: $file"
-            swift -parse "$file" 2>&1 | head -5
+            swiftc -parse "$file" 2>&1 | head -5
           done
           echo "✅ All Swift files parsed successfully"
