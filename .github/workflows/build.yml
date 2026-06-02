@@ -126,7 +126,7 @@ jobs:
           echo "⏳ Waiting 6s for UI to render..."
           sleep 6
 
-      - name: Screenshot 1: Main list with sample data
+      - name: "Screenshot 1: Main list with sample data"
         continue-on-error: true
         run: |
           cd "${{ github.workspace }}"
@@ -134,7 +134,7 @@ jobs:
           ls -la Screenshot_01_Today.png 2>/dev/null
           echo "✅ Screenshot 1 captured"
 
-      - name: Tap first task to mark complete (simulate interaction)
+      - name: "Tap first task to mark complete (simulate interaction)"
         continue-on-error: true
         run: |
           # Tap the first task row (approx coords for iPhone 16 Pro 1206x2622 → points 402x874)
@@ -149,7 +149,7 @@ jobs:
           ls -la Screenshot_02_After_Tap.png 2>/dev/null
           echo "✅ Screenshot 2 captured (after tapping)"
 
-      - name: Screenshot 3: Switch to next day (empty)
+      - name: "Screenshot 3: Switch to next day (empty)"
         continue-on-error: true
         run: |
           # Tap the right arrow (next day) — right side of header
@@ -162,7 +162,7 @@ jobs:
           ls -la Screenshot_03_NextDay.png 2>/dev/null
           echo "✅ Screenshot 3 captured (next day)"
 
-      - name: Record interaction video
+      - name: "Record interaction video"
         continue-on-error: true
         timeout-minutes: 2
         run: |
