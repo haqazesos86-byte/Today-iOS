@@ -116,23 +116,44 @@ jobs:
 
       - name: Launch app with sample data
         continue-on-error: true
-        timeout-minutes: 1
+        timeout-minutes: 3
         run: |
           # SIMCTL_CHILD_* env vars are passed to the launched app as environment
           export SIMCTL_CHILD_SEED_SAMPLE_DATA=1
-          # Use --terminate-running-process in case it's already open
+          # Make sure the app is terminated first to ensure a clean launch
           xcrun simctl terminate "$DEVICE_ID" com.today.app 2>/dev/null || true
-          # Launch in background so step returns quickly
-          xcrun simctl launch "$DEVICE_ID" com.today.app 2>&1 | head -5
-          echo "⏳ Waiting 5s for UI to render..."
-          sleep 5
+          # Uninstall any previous version to start fresh
+          xcrun simctl uninstall "$DEVICE_ID" com.today.app 2>/dev/null || true
+          sleep 1
+          # Reinstall
+          xcrun simctl install "$DEVICE_ID" "$APP_PATH" 2>&1
+          echo "✅ Reinstalled"
+          # Launch and capture PID immediately (this returns fast)
+          LAUNCH_OUT=$(xcrun simctl launch "$DEVICE_ID" com.today.app 2>&1)
+          echo "$LAUNCH_OUT"
+          echo "⏳ Waiting 12s for UI to render..."
+          sleep 12
           # Verify app is running
+          echo "🔍 Checking app status..."
           xcrun simctl spawn "$DEVICE_ID" launchctl list 2>/dev/null | grep -i "com.today" | head -3 || true
+          # Bring app to foreground by re-launching (in case Springboard is showing)
+          xcrun simctl launch "$DEVICE_ID" com.today.app 2>&1 | head -3
+          sleep 3
 
       - name: "Screenshot 1: Main list with sample data"
         continue-on-error: true
         run: |
           cd "${{ github.workspace }}"
+          # Check if app is still running
+          if ! xcrun simctl spawn "$DEVICE_ID" launchctl list 2>/dev/null | grep -q "com.today"; then
+            echo "⚠️ App not running! Checking for crash logs..."
+            xcrun simctl spawn "$DEVICE_ID" log show --last 1m --predicate 'processImagePath contains "Today"' --style compact 2>/dev/null | head -30 || true
+            echo "--- Trying to launch again with console output ---"
+            xcrun simctl launch --console "$DEVICE_ID" com.today.app 2>&1 &
+            LAUNCH_PID=$!
+            sleep 5
+            kill $LAUNCH_PID 2>/dev/null || true
+          fi
           xcrun simctl io "$DEVICE_ID" screenshot --type=png --mask=ignored Screenshot_01_Today.png
           ls -la Screenshot_01_Today.png 2>/dev/null
           echo "✅ Screenshot 1 captured"
