@@ -136,7 +136,7 @@
 		G00100000000000000000007 /* TodayWidgetExtension */ = {
 			isa = PBXGroup;
 			children = (
-				A00100000000000000000001 /* Widget */,
+				A00200000000000000000001 /* TodayWidget.swift */,
 				A00200000000000000000002 /* Info.plist */,
 			);
 			path = TodayWidgetExtension;
@@ -145,36 +145,10 @@
 		G00100000000000000000008 /* TodayWatchApp */ = {
 			isa = PBXGroup;
 			children = (
-				A00100000000000000000001 /* Watch */,
+				A00300000000000000000001 /* TodayWatchApp.swift */,
 				A00300000000000000000002 /* Info.plist */,
 			);
 			path = TodayWatchApp;
-			sourceTree = "<group>";
-		};
-		G00100000000000000000009 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				PR0010000000000000000001 /* Today.app */,
-				PR0020000000000000000001 /* TodayWidgetExtension.appex */,
-				PR0030000000000000000001 /* TodayWatchApp.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		A00100000000000000000001 /* Widget */ = {
-			isa = PBXGroup;
-			children = (
-				A00200000000000000000001 /* TodayWidget.swift */,
-			);
-			path = Widget;
-			sourceTree = "<group>";
-		};
-		A00100000000000000000001 /* Watch */ = {
-			isa = PBXGroup;
-			children = (
-				A00300000000000000000001 /* TodayWatchApp.swift */,
-			);
-			path = Watch;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
