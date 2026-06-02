@@ -28,14 +28,18 @@ final class TaskListViewModel {
 
     func setup(modelContext: ModelContext) {
         self.modelContext = modelContext
-        // Seed sample data only when SEED_SAMPLE_DATA=1 is set (used for CI screenshots)
-        if ProcessInfo.processInfo.environment["SEED_SAMPLE_DATA"] == "1" {
-            seedSampleData()
+        // CI scenarios via env vars:
+        //   SEED_SAMPLE_DATA=1   → 4 unfinished + 2 completed
+        //   SEED_SAMPLE_DATA=2   → only 2 unfinished
+        //   SEED_SAMPLE_DATA=3   → empty
+        //   (unset)               → user data only
+        if let scenario = ProcessInfo.processInfo.environment["SEED_SAMPLE_DATA"] {
+            seedSampleData(scenario: scenario)
         }
         fetchTasks()
     }
 
-    private func seedSampleData() {
+    private func seedSampleData(scenario: String) {
         guard let context = modelContext else { return }
         // Only seed if today's tasks are empty
         let calendar = Calendar.current
@@ -47,14 +51,26 @@ final class TaskListViewModel {
         let existing = (try? context.fetch(FetchDescriptor<TaskItem>(predicate: predicate))) ?? []
         guard existing.isEmpty else { return }
 
-        let samples: [(String, Bool)] = [
-            ("☀️ 早起晨跑 30 分钟", false),
-            ("📧 回复重要邮件", false),
-            ("☕️ 买一杯美式", true),
-            ("📚 读完《代码大全》第 3 章", false),
-            ("💻 完成 Today App 上架准备", true),
-            ("🧘 冥想 10 分钟", false)
-        ]
+        let samples: [(String, Bool)]
+        switch scenario {
+        case "2":
+            samples = [
+                ("☀️ 早起晨跑 30 分钟", false),
+                ("📧 回复重要邮件", false)
+            ]
+        case "3":
+            samples = [] // empty state
+        default: // "1" or any other
+            samples = [
+                ("☀️ 早起晨跑 30 分钟", false),
+                ("📧 回复重要邮件", false),
+                ("📚 读完《代码大全》第 3 章", false),
+                ("🧘 冥想 10 分钟", false),
+                ("☕️ 买一杯美式", true),
+                ("💻 完成 Today App 上架准备", true)
+            ]
+        }
+
         for (index, item) in samples.enumerated() {
             let task = TaskItem(text: item.0, date: startOfDay, order: index)
             task.isDone = item.1
@@ -62,7 +78,7 @@ final class TaskListViewModel {
             context.insert(task)
         }
         try? context.save()
-        print("✅ Seeded \(samples.count) sample tasks for demo")
+        print("✅ Seeded scenario \(scenario) with \(samples.count) tasks")
     }
 
     func fetchTasks() {
