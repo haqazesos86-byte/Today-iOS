@@ -116,16 +116,18 @@ jobs:
 
       - name: Launch app with sample data
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 1
         run: |
-          # SEED_SAMPLE_DATA=1 → TaskListViewModel seeds 6 sample tasks
-          # Pass env via simctl launch's positional args (after bundle id)
-          # Background launch to avoid blocking the step
-          xcrun simctl launch "$DEVICE_ID" com.today.app SEED_SAMPLE_DATA=1 2>&1 || echo "Launch returned non-zero"
-          echo "⏳ Waiting 6s for UI to render..."
-          sleep 6
+          # SIMCTL_CHILD_* env vars are passed to the launched app as environment
+          export SIMCTL_CHILD_SEED_SAMPLE_DATA=1
+          # Use --terminate-running-process in case it's already open
+          xcrun simctl terminate "$DEVICE_ID" com.today.app 2>/dev/null || true
+          # Launch in background so step returns quickly
+          xcrun simctl launch "$DEVICE_ID" com.today.app 2>&1 | head -5
+          echo "⏳ Waiting 5s for UI to render..."
+          sleep 5
           # Verify app is running
-          xcrun simctl spawn "$DEVICE_ID" launchctl list 2>/dev/null | grep -i today | head -3 || true
+          xcrun simctl spawn "$DEVICE_ID" launchctl list 2>/dev/null | grep -i "com.today" | head -3 || true
 
       - name: "Screenshot 1: Main list with sample data"
         continue-on-error: true
