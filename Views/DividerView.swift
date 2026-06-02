@@ -1,5 +1,11 @@
 import SwiftUI
 
+private extension Color {
+    static var tertiaryLabel: Color {
+        Color(UIColor.tertiaryLabel)
+    }
+}
+
 struct DividerView: View {
     var body: some View {
         Rectangle()

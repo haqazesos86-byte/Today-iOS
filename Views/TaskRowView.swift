@@ -1,5 +1,11 @@
 import SwiftUI
 
+private extension Color {
+    static var tertiaryLabel: Color {
+        Color(UIColor.tertiaryLabel)
+    }
+}
+
 struct TaskRowView: View {
     let task: TaskItem
     let isCompleted: Bool
