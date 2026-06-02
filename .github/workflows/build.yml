@@ -114,28 +114,80 @@ jobs:
             sleep 5
           done
 
-      - name: Launch app
+      - name: Launch app with sample data
         continue-on-error: true
         run: |
-          xcrun simctl launch "$DEVICE_ID" com.today.app 2>&1 || echo "Launch returned non-zero"
-          echo "⏳ Waiting 5s for UI to render..."
-          sleep 5
+          # SEED_SAMPLE_DATA=1 → TaskListViewModel seeds 6 sample tasks
+          # SIMCTL_CHILD_* env vars are passed to the launched app
+          xcrun simctl launch \
+            --console-pty \
+            "$DEVICE_ID" com.today.app \
+            SEED_SAMPLE_DATA=1 2>&1 | head -20 || echo "Launch returned non-zero"
+          echo "⏳ Waiting 6s for UI to render..."
+          sleep 6
 
-      - name: Take screenshot (simctl io)
+      - name: Screenshot 1: Main list with sample data
         continue-on-error: true
         run: |
           cd "${{ github.workspace }}"
-          # Use 'simctl io' (not deprecated 'simctl screenshot')
-          xcrun simctl io "$DEVICE_ID" screenshot --type=png --mask=ignored Today_Screenshot.png
-          ls -la Today_Screenshot.png 2>/dev/null && file Today_Screenshot.png
-          echo "✅ Screenshot captured"
+          xcrun simctl io "$DEVICE_ID" screenshot --type=png --mask=ignored Screenshot_01_Today.png
+          ls -la Screenshot_01_Today.png 2>/dev/null
+          echo "✅ Screenshot 1 captured"
 
-      - name: Record short video
+      - name: Tap first task to mark complete (simulate interaction)
         continue-on-error: true
         run: |
+          # Tap the first task row (approx coords for iPhone 16 Pro 1206x2622 → points 402x874)
+          # The "晨跑" task circle is at approximately x=70, y=200 in points
+          xcrun simctl io "$DEVICE_ID" tap 70 230 2>/dev/null || true
+          sleep 1
+          # Tap the second task
+          xcrun simctl io "$DEVICE_ID" tap 70 280 2>/dev/null || true
+          sleep 2
           cd "${{ github.workspace }}"
-          timeout 10 xcrun simctl io "$DEVICE_ID" recordVideo --codec=h264 --display=internal --mask=ignored Today_Video.mov || true
-          ls -la Today_Video.mov 2>/dev/null
+          xcrun simctl io "$DEVICE_ID" screenshot --type=png --mask=ignored Screenshot_02_After_Tap.png
+          ls -la Screenshot_02_After_Tap.png 2>/dev/null
+          echo "✅ Screenshot 2 captured (after tapping)"
+
+      - name: Screenshot 3: Switch to next day (empty)
+        continue-on-error: true
+        run: |
+          # Tap the right arrow (next day) — right side of header
+          xcrun simctl io "$DEVICE_ID" tap 580 130 2>/dev/null || true
+          sleep 1
+          xcrun simctl io "$DEVICE_ID" tap 580 130 2>/dev/null || true
+          sleep 2
+          cd "${{ github.workspace }}"
+          xcrun simctl io "$DEVICE_ID" screenshot --type=png --mask=ignored Screenshot_03_NextDay.png
+          ls -la Screenshot_03_NextDay.png 2>/dev/null
+          echo "✅ Screenshot 3 captured (next day)"
+
+      - name: Record interaction video
+        continue-on-error: true
+        timeout-minutes: 2
+        run: |
+          cd "${{ github.workspace }}"
+          # Switch back to today first
+          xcrun simctl io "$DEVICE_ID" tap 30 130 2>/dev/null || true
+          sleep 1
+          # Start recording in background
+          xcrun simctl io "$DEVICE_ID" recordVideo \
+            --codec=h264 --display=internal --mask=ignored \
+            "${{ github.workspace }}/Today_Video.mov" &
+          VID_PID=$!
+          echo "🎥 Recording started (PID=$VID_PID), capturing 8s of UI demo..."
+          sleep 3
+          # Tap a task
+          xcrun simctl io "$DEVICE_ID" tap 70 230 2>/dev/null || true
+          sleep 2
+          # Switch day
+          xcrun simctl io "$DEVICE_ID" tap 580 130 2>/dev/null || true
+          sleep 3
+          # Stop recording cleanly
+          kill -INT $VID_PID 2>/dev/null || true
+          wait $VID_PID 2>/dev/null || true
+          sleep 2
+          ls -la Today_Video.mov 2>/dev/null && file Today_Video.mov
           echo "✅ Video recorded"
 
       - name: Clean up simulator
@@ -144,6 +196,12 @@ jobs:
           xcrun simctl shutdown "$DEVICE_ID" 2>/dev/null || true
           xcrun simctl delete "$DEVICE_ID" 2>/dev/null || true
           echo "✅ Simulator cleaned up"
+
+      - name: Use the first screenshot as the canonical Today_Screenshot.png
+        run: |
+          cd "${{ github.workspace }}"
+          cp Screenshot_01_Today.png Today_Screenshot.png
+          ls -la Today_Screenshot.png
 
       - name: Generate build preview HTML
         run: |
@@ -185,11 +243,19 @@ jobs:
                   <div class="row"><span class="pass">✅</span> Video Recorded — <span class="pass">PASSED</span></div>
                 </div>
                 <div class="img-box">
-                  <h2 style="font-size:18px;margin-bottom:12px;text-align:left">📸 模拟器截图</h2>
-                  <img src="Today_Screenshot.png" alt="Today App Screenshot">
+                  <h2 style="font-size:18px;margin-bottom:12px;text-align:left">📸 1. 今日主界面（含示例数据）</h2>
+                  <img src="Screenshot_01_Today.png" alt="Main list with sample data">
                 </div>
                 <div class="img-box">
-                  <h2 style="font-size:18px;margin-bottom:12px;text-align:left">🎥 6秒操作演示</h2>
+                  <h2 style="font-size:18px;margin-bottom:12px;text-align:left">👆 2. 点击任务后（完成态下沉到分割线以下）</h2>
+                  <img src="Screenshot_02_After_Tap.png" alt="After tapping">
+                </div>
+                <div class="img-box">
+                  <h2 style="font-size:18px;margin-bottom:12px;text-align:left">📅 3. 切换到其他日期</h2>
+                  <img src="Screenshot_03_NextDay.png" alt="Next day">
+                </div>
+                <div class="img-box">
+                  <h2 style="font-size:18px;margin-bottom:12px;text-align:left">🎥 8秒操作演示视频</h2>
                   <video src="Today_Video.mov" controls autoplay muted loop></video>
                 </div>
                 <hr>
@@ -211,6 +277,9 @@ jobs:
           name: Today-Build-Result
           path: |
             ${{ github.workspace }}/Today_Screenshot.png
+            ${{ github.workspace }}/Screenshot_01_Today.png
+            ${{ github.workspace }}/Screenshot_02_After_Tap.png
+            ${{ github.workspace }}/Screenshot_03_NextDay.png
             ${{ github.workspace }}/Today_Video.mov
             ${{ github.workspace }}/preview.html
           if-no-files-found: warn

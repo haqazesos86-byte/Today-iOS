@@ -28,7 +28,41 @@ final class TaskListViewModel {
 
     func setup(modelContext: ModelContext) {
         self.modelContext = modelContext
+        // Seed sample data only when SEED_SAMPLE_DATA=1 is set (used for CI screenshots)
+        if ProcessInfo.processInfo.environment["SEED_SAMPLE_DATA"] == "1" {
+            seedSampleData()
+        }
         fetchTasks()
+    }
+
+    private func seedSampleData() {
+        guard let context = modelContext else { return }
+        // Only seed if today's tasks are empty
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: Date())
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        let predicate = #Predicate<TaskItem> { item in
+            item.date >= startOfDay && item.date < endOfDay
+        }
+        let existing = (try? context.fetch(FetchDescriptor<TaskItem>(predicate: predicate))) ?? []
+        guard existing.isEmpty else { return }
+
+        let samples: [(String, Bool)] = [
+            ("☀️ 早起晨跑 30 分钟", false),
+            ("📧 回复重要邮件", false),
+            ("☕️ 买一杯美式", true),
+            ("📚 读完《代码大全》第 3 章", false),
+            ("💻 完成 Today App 上架准备", true),
+            ("🧘 冥想 10 分钟", false)
+        ]
+        for (index, item) in samples.enumerated() {
+            let task = TaskItem(text: item.0, date: startOfDay, order: index)
+            task.isDone = item.1
+            task.doneAt = item.1 ? Date().addingTimeInterval(-Double(index * 600)) : nil
+            context.insert(task)
+        }
+        try? context.save()
+        print("✅ Seeded \(samples.count) sample tasks for demo")
     }
 
     func fetchTasks() {
