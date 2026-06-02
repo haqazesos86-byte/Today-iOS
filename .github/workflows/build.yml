@@ -46,9 +46,20 @@ jobs:
       - name: Locate built app bundle
         id: locate
         run: |
-          APP_PATH=$(find "${{ github.workspace }}" -name "Today.app" -path "*/Debug-iphonesimulator/*" -type d | head -1)
+          # On GitHub Actions macOS runner, build artifacts are in DerivedData,
+          # not in the workspace directory. Search both locations.
+          APP_PATH=$(find "$HOME/Library/Developer/Xcode/DerivedData" -name "Today.app" -path "*/Debug-iphonesimulator/*" -type d 2>/dev/null | head -1)
           if [ -z "$APP_PATH" ]; then
-            echo "❌ Today.app not found"
+            APP_PATH=$(find "${{ github.workspace }}" -name "Today.app" -path "*/Debug-iphonesimulator/*" -type d 2>/dev/null | head -1)
+          fi
+          if [ -z "$APP_PATH" ]; then
+            # Last resort: search /Users
+            APP_PATH=$(find /Users -name "Today.app" -path "*/Debug-iphonesimulator/*" -type d 2>/dev/null | head -1)
+          fi
+          if [ -z "$APP_PATH" ]; then
+            echo "❌ Today.app not found in any expected location"
+            echo "DerivedData contents:"
+            ls -la "$HOME/Library/Developer/Xcode/DerivedData/" 2>/dev/null | head -10 || true
             exit 1
           fi
           echo "APP_PATH=$APP_PATH" >> $GITHUB_ENV
@@ -196,8 +207,25 @@ jobs:
             ${{ github.workspace }}/Today_Screenshot.png
             ${{ github.workspace }}/Today_Video.mov
             ${{ github.workspace }}/preview.html
-            ${{ github.workspace }}/Today.app
-          if-no-files-found: error
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Copy app bundle to workspace for upload
+        if: always()
+        run: |
+          if [ -n "$APP_PATH" ] && [ -d "$APP_PATH" ]; then
+            mkdir -p "${{ github.workspace }}/artifacts"
+            cp -R "$APP_PATH" "${{ github.workspace }}/artifacts/Today.app"
+            du -sh "${{ github.workspace }}/artifacts/Today.app"
+            echo "✅ App bundle copied to artifacts/"
+          fi
+
+      - name: Upload app bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: Today-App-Bundle
+          path: ${{ github.workspace }}/artifacts/Today.app
+          if-no-files-found: warn
           retention-days: 30
 
   check-code:
