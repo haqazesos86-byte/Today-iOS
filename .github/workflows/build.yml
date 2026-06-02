@@ -1,4 +1,4 @@
-name: Build Today iOS App
+name: Build & Simulate Today iOS App
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: Build Today App
+    name: Build & Run on Simulator
     runs-on: macos-latest
 
     steps:
@@ -25,111 +25,178 @@ jobs:
           xcodebuild -version
           echo "WORKSPACE: ${{ github.workspace }}"
 
-      - name: Build app (simulator, no signing)
+      - name: Build for iOS Simulator
         run: |
+          set -o pipefail
           xcodebuild build \
             -project "Today.xcodeproj" \
             -scheme "Today" \
             -configuration Debug \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
-            CODE_SIGNING_ALLOWED=NO | xcpretty
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee build.log | xcpretty || {
+              echo "❌ Build failed. Full log:"
+              cat build.log
+              exit 1
+            }
+          echo "✅ Build succeeded"
 
-      - name: Find and set APP_PATH
+      - name: Locate built app bundle
+        id: locate
         run: |
           APP_PATH=$(find "${{ github.workspace }}" -name "Today.app" -path "*/Debug-iphonesimulator/*" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "❌ Today.app not found"
+            exit 1
+          fi
           echo "APP_PATH=$APP_PATH" >> $GITHUB_ENV
-          echo "📦 Bundle: $APP_PATH"
+          echo "📦 App bundle: $APP_PATH"
+          ls -la "$APP_PATH"
+          du -sh "$APP_PATH"
 
-      - name: Boot simulator + install app
-        continue-on-error: true
+      - name: Boot simulator & install app
+        id: boot
         run: |
-          # Create or reuse simulator device
-          DEVICE_ID=$(xcrun simctl create "Today-Device" \
-            com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro \
-            com.apple.CoreSimulator.SimRuntime.iOS-18-4 2>/dev/null || \
-            xcrun simctl create "Today-Device" \
-            com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro \
-            com.apple.CoreSimulator.SimRuntime.iOS-17-5 2>/dev/null || echo "")
-
-          if [ -z "$DEVICE_ID" ]; then
-            DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone 16" | tail -1 | awk -F'[()]' '{print $2}')
+          # Pick the most recent iPhone simulator
+          RUNTIME=$(xcrun simctl list runtimes available | grep -E "iOS [0-9]+\.[0-9]+" | tail -1 | awk -F'- ' '{print $NF}' | awk '{print $1}')
+          DEVICETYPE=$(xcrun simctl list devicetypes | grep "iPhone 16 Pro " | awk -F') ' '{print $NF}' | head -1)
+          if [ -z "$DEVICETYPE" ]; then
+            DEVICETYPE=$(xcrun simctl list devicetypes | grep "iPhone" | tail -1 | awk -F') ' '{print $NF}')
+          fi
+          if [ -z "$RUNTIME" ]; then
+            RUNTIME="com.apple.CoreSimulator.SimRuntime.iOS-18-4"
           fi
 
-          echo "📱 Device: $DEVICE_ID"
-          xcrun simctl boot "$DEVICE_ID" 2>&1
+          echo "📱 Runtime: $RUNTIME"
+          echo "📱 Device type: $DEVICETYPE"
 
-          # Wait for boot
-          for i in 1 2 3 4 5 6; do
-            xcrun simctl list devices | grep "$DEVICE_ID" | grep -q '(Booted)' && break
+          DEVICE_ID=$(xcrun simctl create "Today-Sim" "com.apple.CoreSimulator.SimDeviceType.$DEVICETYPE" "$RUNTIME" 2>/dev/null)
+          if [ -z "$DEVICE_ID" ]; then
+            # Fallback to existing device
+            DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone" | tail -1 | awk -F'[()]' '{print $2}' | head -1)
+          fi
+          echo "📱 Device ID: $DEVICE_ID"
+          echo "DEVICE_ID=$DEVICE_ID" >> $GITHUB_ENV
+
+          xcrun simctl boot "$DEVICE_ID"
+          echo "⏳ Waiting for boot..."
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            STATE=$(xcrun simctl list devices | grep "$DEVICE_ID" | grep -o '(Booted)' || echo "")
+            if [ -n "$STATE" ]; then
+              echo "✅ Booted in ${i}*3s"
+              break
+            fi
             sleep 3
           done
 
-          # Install and launch
-          xcrun simctl install "$DEVICE_ID" "$APP_PATH" 2>&1
-          xcrun simctl launch "$DEVICE_ID" com.today.app 2>&1 || true
-          echo "✅ App installed and launched!"
+          # Install
+          xcrun simctl install "$DEVICE_ID" "$APP_PATH" && echo "✅ Installed"
 
-      - name: Screenshot
-        continue-on-error: true
+      - name: Launch app
         run: |
-          if xcrun simctl list devices | grep -q '(Booted)'; then
-            sleep 4
-            xcrun simctl screenshot booted "Today_Screenshot.png"
-            echo "✅ Screenshot saved"
-          fi
+          xcrun simctl launch "$DEVICE_ID" com.today.app
+          echo "✅ App launched, waiting 4s for UI to render..."
+          sleep 4
+
+      - name: Take screenshot (simctl io)
+        run: |
+          cd "${{ github.workspace }}"
+          # Use the correct 'simctl io' command (not the deprecated 'simctl screenshot')
+          xcrun simctl io "$DEVICE_ID" screenshot --type=png --mask=ignored Today_Screenshot.png
+          ls -la Today_Screenshot.png
+          file Today_Screenshot.png
+          echo "✅ Screenshot saved"
+
+      - name: Record short video
+        run: |
+          cd "${{ github.workspace }}"
+          xcrun simctl io "$DEVICE_ID" recordVideo --codec=h264 --display=internal --mask=ignored Today_Video.mov &
+          VID_PID=$!
+          echo "🎥 Recording started (PID $VID_PID), capturing UI demo for 6s..."
+          sleep 6
+          kill -INT $VID_PID 2>/dev/null
+          wait $VID_PID 2>/dev/null
+          ls -la Today_Video.mov
+          echo "✅ Video recorded"
+
+      - name: Clean up simulator
+        if: always()
+        run: |
+          xcrun simctl shutdown "$DEVICE_ID" 2>/dev/null || true
+          xcrun simctl delete "$DEVICE_ID" 2>/dev/null || true
+          echo "✅ Simulator cleaned up"
 
       - name: Generate build preview HTML
         run: |
+          cd "${{ github.workspace }}"
           cat > preview.html << 'HTML'
-          <!DOCTYPE html><html><head><meta charset="utf-8">
-          <title>Today App Build</title>
-          <style>
-            *{margin:0;padding:0;box-sizing:border-box}
-            body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro',sans-serif;background:#f5f5f7;color:#1d1d1f;display:flex;justify-content:center;padding:40px 20px}
-            .card{max-width:600px;width:100%;background:#fff;padding:40px}
-            h1{font-size:32px;font-weight:600;margin-bottom:4px}
-            .sub{color:#86868b;font-size:14px;margin-bottom:24px}
-            .grid{display:grid;gap:12px;margin:24px 0}
-            .item{display:flex;align-items:center;gap:10px;padding:12px;background:#f5f5f7;font-size:14px}
-            .pass{color:#30d158;font-weight:600}
-            hr{border:none;border-top:0.5px solid #e5e5ea;margin:24px 0}
-            code{background:#f5f5f7;padding:2px 6px;font-size:12px}
-          </style></head><body>
-          <div class="card">
-            <h1>📱 Today</h1>
-            <div class="sub">iOS 17+ SwiftUI · 极简每日待办清单</div>
-            <div class="grid">
-              <div class="item"><span class="pass">✅</span> Build — <span class="pass">PASSED</span></div>
-              <div class="item"><span class="pass">✅</span> Swift Syntax — <span class="pass">PASSED</span></div>
-              <div class="item"><span>✅</span> Simulator — BOOTED & RUNNING</div>
+          <!DOCTYPE html>
+          <html lang="zh-CN">
+          <head>
+            <meta charset="utf-8">
+            <title>Today iOS App — Build Result</title>
+            <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', 'PingFang SC', sans-serif; background: #f5f5f7; color: #1d1d1f; padding: 40px 20px; }
+              .container { max-width: 720px; margin: 0 auto; }
+              .card { background: #fff; padding: 40px; }
+              h1 { font-size: 32px; font-weight: 600; margin-bottom: 4px; }
+              .sub { color: #86868b; font-size: 14px; margin-bottom: 24px; }
+              .status { display: grid; gap: 12px; margin: 24px 0; }
+              .row { display: flex; align-items: center; gap: 10px; padding: 12px; background: #f5f5f7; font-size: 14px; }
+              .pass { color: #30d158; font-weight: 600; }
+              .img-box { margin-top: 24px; text-align: center; }
+              .img-box img { max-width: 100%; height: auto; border: 1px solid #e5e5ea; }
+              .img-box video { max-width: 100%; height: auto; border: 1px solid #e5e5ea; }
+              hr { border: none; border-top: 0.5px solid #e5e5ea; margin: 24px 0; }
+              code { background: #f5f5f7; padding: 2px 6px; font-size: 12px; font-family: 'SF Mono', Menlo, monospace; }
+              .footer { font-size: 12px; color: #86868b; margin-top: 24px; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="card">
+                <h1>📱 Today</h1>
+                <div class="sub">iOS 17+ SwiftUI · 极简每日待办清单</div>
+                <div class="status">
+                  <div class="row"><span class="pass">✅</span> Xcode Build — <span class="pass">PASSED</span></div>
+                  <div class="row"><span class="pass">✅</span> App Installed to Simulator — <span class="pass">PASSED</span></div>
+                  <div class="row"><span class="pass">✅</span> App Launched — <span class="pass">PASSED</span></div>
+                  <div class="row"><span class="pass">✅</span> Screenshot Captured — <span class="pass">PASSED</span></div>
+                  <div class="row"><span class="pass">✅</span> Video Recorded — <span class="pass">PASSED</span></div>
+                </div>
+                <div class="img-box">
+                  <h2 style="font-size:18px;margin-bottom:12px;text-align:left">📸 模拟器截图</h2>
+                  <img src="Today_Screenshot.png" alt="Today App Screenshot">
+                </div>
+                <div class="img-box">
+                  <h2 style="font-size:18px;margin-bottom:12px;text-align:left">🎥 6秒操作演示</h2>
+                  <video src="Today_Video.mov" controls autoplay muted loop></video>
+                </div>
+                <hr>
+                <div class="footer">
+                  <p>Bundle ID: <code>com.today.app</code> · iOS 17.0+ · Widget · Watch</p>
+                  <p style="margin-top:8px">Built on GitHub Actions macOS runner (Xcode 26, iOS 18.4 simulator)</p>
+                  <p style="margin-top:8px">仓库: <code>haqazesos86-byte/Today-iOS</code></p>
+                </div>
+              </div>
             </div>
-            <p style="color:#86868b;font-size:13px">
-              Built on GitHub Actions (macOS runner, Xcode 26)<br>
-              Open <code>Today.xcodeproj</code> in Xcode to preview
-            </p>
-            <hr>
-            <p style="font-size:12px;color:#86868b">
-              com.today.app · iOS 17.0+ · Widget · Watch
-            </p>
-          </div></body></html>
+          </body>
+          </html>
           HTML
+          echo "✅ Preview HTML generated"
 
-      - name: Upload build result
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Today-Build-Result
           path: |
             ${{ github.workspace }}/Today_Screenshot.png
+            ${{ github.workspace }}/Today_Video.mov
             ${{ github.workspace }}/preview.html
-          if-no-files-found: continue
-
-      - name: Upload app bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: Today-App-Bundle
-          path: ${{ env.APP_PATH }}
-          if-no-files-found: continue
+            ${{ github.workspace }}/Today.app
+          if-no-files-found: error
+          retention-days: 30
 
   check-code:
     name: Swift Syntax Check
