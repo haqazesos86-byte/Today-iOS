@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Today — 极简每日待办</title>
+  <title>番茄 — 今天</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,14 +11,13 @@
 
   <style>
     /* ============================================================
-       今日 v4 — Editorial + Soft UI + 9 new features
+       番茄 v5 — Early Fanqie architecture
+       Schema: Task (commit to N tomatoes) + Tomato log
+       No due dates as first-class. Drag-to-reorder. Half-sheet.
        ============================================================ */
 
-    /* Theme tokens */
     :root {
       --accent: #FF5733;
-      --accent-soft: #FFF0EB;
-      --accent-fade: rgba(255, 87, 51, 0.08);
       --bg: #FAFAF7;
       --surface: #FFFFFF;
       --ink: #0A0A0A;
@@ -26,19 +25,18 @@
       --ink-fade: rgba(10, 10, 10, 0.35);
       --ink-ghost: rgba(10, 10, 10, 0.08);
       --border: rgba(10, 10, 10, 0.06);
+      --tomato: #E84A3D;
+      --tomato-soft: #FCE4E1;
       --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
       --shadow-md: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px -8px rgba(0,0,0,0.08);
       --shadow-lg: 0 1px 2px rgba(0,0,0,0.04), 0 16px 40px -8px rgba(0,0,0,0.12);
     }
+    body[data-accent="sunset"]   { --accent: #FF5733; --tomato: #E84A3D; --tomato-soft: #FCE4E1; }
+    body[data-accent="forest"]   { --accent: #2B8A3E; --tomato: #2B8A3E; --tomato-soft: #E5F4E7; }
+    body[data-accent="ocean"]    { --accent: #0066FF; --tomato: #0066FF; --tomato-soft: #E0ECFF; }
+    body[data-accent="lavender"] { --accent: #6741D9; --tomato: #6741D9; --tomato-soft: #EFE9FB; }
+    body[data-accent="ink"]      { --accent: #0A0A0A; --tomato: #0A0A0A; --tomato-soft: #EFEFEC; }
 
-    /* Accent themes */
-    body[data-accent="sunset"]   { --accent: #FF5733; --accent-soft: #FFF0EB; --accent-fade: rgba(255,87,51,0.08); }
-    body[data-accent="forest"]   { --accent: #2B8A3E; --accent-soft: #EDF7EC; --accent-fade: rgba(43,138,62,0.08); }
-    body[data-accent="ocean"]    { --accent: #0066FF; --accent-soft: #EBF4FF; --accent-fade: rgba(0,102,255,0.08); }
-    body[data-accent="lavender"] { --accent: #6741D9; --accent-soft: #F5F0FF; --accent-fade: rgba(103,65,217,0.08); }
-    body[data-accent="ink"]     { --accent: #0A0A0A; --accent-soft: #EFEFEC; --accent-fade: rgba(10,10,10,0.06); }
-
-    /* Reset */
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body {
       height: 100%;
@@ -46,34 +44,24 @@
       color: var(--ink);
       background: var(--bg);
       overflow: hidden;
-      user-select: none;
-      -webkit-user-select: none;
+      user-select: none; -webkit-user-select: none;
       font-feature-settings: "ss01", "cv11";
-      letter-spacing: -0.005em;
-      transition: background 0.3s;
     }
     button { font-family: inherit; background: none; border: none; cursor: pointer; color: inherit; }
     input { font-family: inherit; }
 
-    /* Paper grain */
     body::before {
-      content: '';
-      position: fixed; inset: 0;
+      content: ''; position: fixed; inset: 0;
       background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.025 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
-      pointer-events: none;
-      z-index: 1;
-      mix-blend-mode: multiply;
+      pointer-events: none; z-index: 1; mix-blend-mode: multiply;
     }
     .phone { position: relative; z-index: 2; }
 
     .phone {
       max-width: 480px;
-      width: 100%;
-      height: 100%;
-      max-height: 920px;
+      width: 100%; height: 100%; max-height: 920px;
       margin: 0 auto;
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       overflow: hidden;
     }
     @media (min-width: 600px) {
@@ -88,43 +76,26 @@
     /* Status bar */
     .statusbar {
       height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 24px;
-      font-size: 14px;
-      font-weight: 600;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; font-size: 14px; font-weight: 600;
       flex-shrink: 0;
     }
     .statusbar .right { display: flex; align-items: center; gap: 6px; }
-    .statusbar .battery {
-      width: 24px; height: 11px;
-      border: 1.2px solid var(--ink);
-      border-radius: 3px;
-      position: relative;
-    }
-    .statusbar .battery::after {
-      content: ''; position: absolute; top: 1.5px; left: 1.5px;
-      width: 70%; height: 5px;
-      background: var(--ink);
-      border-radius: 1px;
-    }
+    .statusbar .battery { width: 24px; height: 11px; border: 1.2px solid var(--ink); border-radius: 3px; position: relative; }
+    .statusbar .battery::after { content: ''; position: absolute; top: 1.5px; left: 1.5px; width: 70%; height: 5px; background: var(--ink); border-radius: 1px; }
 
-    /* Header */
+    /* === Header === */
     .header {
       flex-shrink: 0;
       padding: 4px 24px 20px;
     }
     .header .top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 14px;
     }
     .header .brand {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 0.12em;
+      font-size: 11px; letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--ink-soft);
     }
@@ -132,43 +103,31 @@
     .header .actions button {
       width: 32px; height: 32px;
       display: flex; align-items: center; justify-content: center;
-      color: var(--ink);
-      border-radius: 10px;
+      color: var(--ink); border-radius: 10px;
       transition: background 0.15s;
     }
     .header .actions button:hover { background: var(--ink-ghost); }
     .header .actions button:active { background: var(--ink-fade); }
-    .header .actions button.active { background: var(--accent-fade); color: var(--accent); }
-
+    .header .actions button.active { background: var(--accent-soft); color: var(--accent); }
     .header .greeting {
       font-family: 'Instrument Serif', serif;
-      font-size: 13px;
-      font-style: italic;
+      font-size: 13px; font-style: italic;
       color: var(--ink-soft);
     }
     .header .headline {
       font-family: 'Instrument Serif', serif;
-      font-size: 44px;
-      line-height: 1.05;
-      font-weight: 400;
-      letter-spacing: -0.02em;
+      font-size: 44px; line-height: 1.05;
+      font-weight: 400; letter-spacing: -0.02em;
       margin: 4px 0 6px;
     }
-    .header .headline em {
-      font-style: italic;
-      color: var(--accent);
-    }
+    .header .headline em { font-style: italic; color: var(--accent); }
     .header .meta {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 12px;
-      color: var(--ink-soft);
-      font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12px; color: var(--ink-soft); font-weight: 500;
     }
     .header .meta .dot { width: 3px; height: 3px; background: var(--ink-fade); border-radius: 50%; }
 
-    /* Bento */
+    /* === Bento === */
     .bento {
       flex-shrink: 0;
       display: grid;
@@ -182,176 +141,74 @@
       border-radius: 20px;
       padding: 16px;
       box-shadow: var(--shadow-sm), 0 0 0 1px var(--border);
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .bento .card:hover {
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-md);
+      position: relative; overflow: hidden;
+      transition: transform 0.2s;
     }
     .bento .card.clickable { cursor: pointer; }
     .bento .card.clickable:active { transform: scale(0.98); }
-
     .bento .hero {
       grid-row: span 2;
-      background: linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent), #fff 12%) 100%);
+      background: linear-gradient(135deg, var(--tomato) 0%, color-mix(in srgb, var(--tomato), #fff 8%) 100%);
       color: white;
-      box-shadow: 0 1px 2px var(--accent-fade), 0 12px 28px -8px var(--accent-fade);
+      box-shadow: 0 1px 2px var(--tomato-soft), 0 12px 28px -8px var(--tomato-soft);
     }
     .bento .hero .label {
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      opacity: 0.7;
-      font-weight: 600;
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      opacity: 0.75; font-weight: 600;
     }
     .bento .hero .pct {
       font-family: 'Instrument Serif', serif;
-      font-size: 72px;
-      line-height: 1;
-      font-weight: 400;
-      letter-spacing: -0.04em;
-      margin: 12px 0 4px;
+      font-size: 72px; line-height: 1; font-weight: 400;
+      letter-spacing: -0.04em; margin: 8px 0 4px;
       font-variant-numeric: tabular-nums;
     }
-    .bento .hero .pct::after {
-      content: '%';
-      font-size: 32px;
-      opacity: 0.6;
-      margin-left: 2px;
-    }
+    .bento .hero .pct::after { content: '🍅'; font-size: 32px; opacity: 0.5; margin-left: 8px; }
     .bento .hero .sub { font-size: 13px; opacity: 0.85; font-weight: 500; }
-    .bento .hero .ring-mini {
-      position: absolute; right: -30px; top: -30px;
-      width: 120px; height: 120px;
-      border: 1.5px solid rgba(255,255,255,0.2);
-      border-radius: 50%;
-    }
-    .bento .hero .ring-mini::after {
-      content: ''; position: absolute; inset: 8px;
-      border: 1.5px solid rgba(255,255,255,0.15);
-      border-radius: 50%;
-    }
-
-    .bento .small .label {
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--ink-soft);
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-    .bento .small .val {
-      font-family: 'Instrument Serif', serif;
-      font-size: 32px;
-      font-weight: 400;
-      line-height: 1;
-      letter-spacing: -0.02em;
-      font-variant-numeric: tabular-nums;
-    }
-    .bento .small .val small {
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
-      color: var(--ink-soft);
-      font-weight: 500;
-      margin-left: 4px;
-    }
-    .bento .small .delta {
-      font-size: 11px;
-      color: var(--accent);
-      font-weight: 600;
-      margin-top: 6px;
-    }
+    .bento .small .label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; margin-bottom: 8px; }
+    .bento .small .val { font-family: 'Instrument Serif', serif; font-size: 32px; font-weight: 400; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    .bento .small .val small { font-family: 'Inter', sans-serif; font-size: 13px; color: var(--ink-soft); font-weight: 500; margin-left: 4px; }
+    .bento .small .delta { font-size: 11px; color: var(--accent); font-weight: 600; margin-top: 6px; }
     .bento .small .delta.neutral { color: var(--ink-soft); }
 
-    .freeze-token {
-      position: absolute; top: 12px; right: 12px;
-      display: flex; align-items: center; gap: 4px;
-      padding: 4px 8px;
-      background: rgba(255,255,255,0.25);
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 600;
-      backdrop-filter: blur(8px);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .freeze-token:active { transform: scale(0.95); }
-    .freeze-token.disabled { opacity: 0.4; cursor: not-allowed; }
-    .freeze-token svg { width: 12px; height: 12px; }
-
-    /* Section labels */
+    /* === Section label === */
     .section-label {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      padding: 0 24px;
-      margin: 20px 0 10px;
+      display: flex; align-items: baseline; justify-content: space-between;
+      padding: 0 24px; margin: 20px 0 10px;
     }
-    .section-label .label {
-      font-size: 11px;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--ink-soft);
-      font-weight: 600;
-    }
-    .section-label .count {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--ink-soft);
-    }
+    .section-label .label { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; }
+    .section-label .count { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); }
 
-    /* List */
-    .list-area {
-      flex: 1;
-      overflow-y: auto;
-      padding: 0 20px 100px;
-      -webkit-overflow-scrolling: touch;
-    }
+    /* === Task list (drag-reorderable) === */
+    .list-area { flex: 1; overflow-y: auto; padding: 0 20px 100px; -webkit-overflow-scrolling: touch; }
     .list-area::-webkit-scrollbar { display: none; }
 
-    .task-card {
+    .task-row {
       background: var(--surface);
       border-radius: 16px;
       padding: 16px 18px;
       margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
+      display: flex; align-items: center; gap: 14px;
       box-shadow: var(--shadow-sm), 0 0 0 1px var(--border);
-      transition: opacity 0.3s, transform 0.3s, background 0.2s;
-      cursor: pointer;
+      transition: opacity 0.3s, transform 0.2s, box-shadow 0.2s;
+      cursor: grab;
       position: relative;
-      touch-action: pan-y;
     }
-    .task-card.done { opacity: 0.5; }
-    .task-card.done .text { text-decoration: line-through; text-decoration-color: rgba(10,10,10,0.4); text-decoration-thickness: 1.5px; }
-    .task-card.done .check { background: var(--ink); border-color: var(--ink); }
-    .task-card.done .check svg { opacity: 1; transform: scale(1); }
-    .task-card.done .icon { opacity: 0.5; }
+    .task-row:active { cursor: grabbing; }
+    .task-row.dragging { opacity: 0.5; transform: scale(0.98); }
+    .task-row.drag-over-top { box-shadow: 0 -3px 0 var(--tomato); }
+    .task-row.drag-over-bottom { box-shadow: 0 3px 0 var(--tomato); }
+    .task-row.done .body .text { text-decoration: line-through; text-decoration-color: rgba(10,10,10,0.4); text-decoration-thickness: 1.5px; color: var(--ink-soft); }
+    .task-row.done { opacity: 0.5; }
+    .task-row.done .tomatocount { color: var(--ink-fade); }
+    .task-row.removing { opacity: 0; transform: translateX(-100%); pointer-events: none; }
 
-    /* Swipe states */
-    .task-card.swiping { transition: none; }
-    .task-card.swipe-left { transform: translateX(-80px); }
-    .task-card.swipe-right { transform: translateX(80px); }
-    .task-card .swipe-bg-left, .task-card .swipe-bg-right {
-      position: absolute;
-      top: 0; bottom: 0;
-      width: 80px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      font-weight: 600;
-      color: white;
-      opacity: 0;
-      transition: opacity 0.2s;
+    .handle {
+      width: 16px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--ink-fade); flex-shrink: 0;
+      cursor: grab; touch-action: none;
     }
-    .task-card .swipe-bg-left { left: 0; background: var(--accent); border-radius: 16px 0 0 16px; }
-    .task-card .swipe-bg-right { right: 0; background: #0A0A0A; border-radius: 0 16px 16px 0; }
-    .task-card.swipe-left .swipe-bg-left,
-      .task-card.swipe-right .swipe-bg-right { opacity: 1; }
+    .handle svg { width: 16px; height: 16px; }
 
     .icon {
       width: 40px; height: 40px;
@@ -367,63 +224,33 @@
 
     .body { flex: 1; min-width: 0; }
     .body .text {
-      font-size: 15px;
-      line-height: 1.35;
-      font-weight: 500;
+      font-size: 15px; line-height: 1.35; font-weight: 500;
       word-wrap: break-word;
     }
-    .body .meta {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .tomatocount {
+      display: flex; align-items: center; gap: 3px;
       margin-top: 4px;
-      font-size: 11px;
-      color: var(--ink-soft);
-      font-weight: 500;
-      flex-wrap: wrap;
+      font-size: 12px; color: var(--ink-soft); font-weight: 500;
     }
-    .body .meta .tag {
-      display: inline-flex; align-items: center; gap: 3px;
-      padding: 2px 6px;
-      background: var(--ink-ghost);
-      border-radius: 4px;
-      color: var(--ink);
-    }
-    .body .meta .tag svg { width: 9px; height: 9px; }
-    .body .meta .time-pill {
-      display: inline-flex; align-items: center; gap: 3px;
-      padding: 2px 6px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      border-radius: 4px;
-      font-weight: 600;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-    }
-    .body .meta .recurring {
-      display: inline-flex; align-items: center; gap: 3px;
-      color: var(--accent);
-    }
-    .body .meta .recurring svg { width: 9px; height: 9px; }
+    .tomatocount .tomato { font-size: 11px; }
+    .tomatocount .tomato.filled { color: var(--tomato); }
+    .tomatocount .tomato.empty { color: var(--ink-ghost); }
 
-    .check {
-      width: 22px; height: 22px;
+    .quickstart {
+      width: 36px; height: 36px;
       border-radius: 50%;
-      border: 1.5px solid rgba(10,10,10,0.18);
-      flex-shrink: 0;
+      background: var(--tomato);
+      color: white;
       display: flex; align-items: center; justify-content: center;
-      transition: all 0.25s;
+      font-size: 16px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(232, 74, 61, 0.35);
+      transition: transform 0.2s;
     }
-    .check svg {
-      width: 12px; height: 12px;
-      stroke: white; stroke-width: 2.5;
-      stroke-linecap: round; stroke-linejoin: round;
-      fill: none;
-      opacity: 0; transform: scale(0.5);
-      transition: opacity 0.2s, transform 0.2s;
-    }
+    .quickstart:active { transform: scale(0.92); }
+    .quickstart.running { background: var(--ink); }
 
-    /* Empty state */
+    /* === Empty state === */
     .empty {
       flex: 1;
       display: flex; flex-direction: column;
@@ -432,22 +259,11 @@
       padding: 40px 20px 60px;
     }
     .empty.hidden { display: none; }
-    .empty .art { width: 160px; height: 160px; margin-bottom: 20px; opacity: 0.85; }
-    .empty .title {
-      font-family: 'Instrument Serif', serif;
-      font-size: 24px;
-      font-weight: 400;
-      letter-spacing: -0.01em;
-      margin-bottom: 6px;
-    }
-    .empty .sub {
-      font-size: 13px;
-      color: var(--ink-soft);
-      max-width: 240px;
-      line-height: 1.5;
-    }
+    .empty .art { width: 140px; height: 140px; margin-bottom: 16px; }
+    .empty .title { font-family: 'Instrument Serif', serif; font-size: 24px; font-weight: 400; letter-spacing: -0.01em; margin-bottom: 6px; }
+    .empty .sub { font-size: 13px; color: var(--ink-soft); max-width: 240px; line-height: 1.5; }
 
-    /* Composer (floating input) */
+    /* === Floating add input === */
     .composer {
       position: absolute;
       bottom: 24px;
@@ -459,45 +275,86 @@
       -webkit-backdrop-filter: blur(20px) saturate(180%);
       border-radius: 18px;
       padding: 6px 6px 6px 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      display: flex; align-items: center; gap: 10px;
       box-shadow: var(--shadow-md);
       transition: box-shadow 0.3s;
     }
-    .composer.focused {
-      box-shadow: var(--shadow-md), 0 0 0 2px var(--ink), 0 16px 40px -8px rgba(0,0,0,0.15);
-    }
-    .composer .plus {
-      width: 20px; height: 20px;
-      color: var(--ink-soft);
-      flex-shrink: 0;
-      transition: transform 0.3s, color 0.3s;
-    }
+    .composer.focused { box-shadow: var(--shadow-md), 0 0 0 2px var(--ink); }
+    .composer .plus { width: 20px; height: 20px; color: var(--ink-soft); flex-shrink: 0; transition: transform 0.3s, color 0.3s; }
     .composer.focused .plus { transform: rotate(45deg); color: var(--ink); }
-    .composer input {
-      flex: 1;
-      border: none; outline: none; background: transparent;
-      font-size: 15px;
-      font-weight: 400;
-      color: var(--ink);
-      padding: 10px 0;
-    }
+    .composer input { flex: 1; border: none; outline: none; background: transparent; font-size: 15px; font-weight: 400; color: var(--ink); padding: 10px 0; }
     .composer input::placeholder { color: var(--ink-fade); }
-    .composer .submit {
-      width: 36px; height: 36px;
-      border-radius: 12px;
-      background: var(--ink);
-      color: white;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-      transition: all 0.2s;
-    }
+    .composer .submit { width: 36px; height: 36px; border-radius: 12px; background: var(--ink); color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
     .composer .submit:disabled { opacity: 0.25; }
     .composer .submit:not(:disabled):active { transform: scale(0.92); }
     .composer .submit svg { width: 16px; height: 16px; }
 
-    /* Cmd+K Command Bar */
+    /* === Pomodoro (full-screen like early Fanqie) === */
+    .pomo-overlay {
+      position: fixed; inset: 0;
+      background: var(--tomato);
+      color: white;
+      display: flex; flex-direction: column;
+      z-index: 200;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.4s;
+    }
+    .pomo-overlay.show { opacity: 1; pointer-events: auto; }
+    .pomo-overlay .pomo-content {
+      flex: 1;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .pomo-overlay .task-name {
+      font-family: 'Instrument Serif', serif;
+      font-size: 22px; font-style: italic;
+      opacity: 0.85;
+      text-align: center;
+      max-width: 320px;
+      margin-bottom: 32px;
+    }
+    .pomo-overlay .tomato-art {
+      width: 180px; height: 180px;
+      position: relative;
+      margin-bottom: 32px;
+    }
+    .pomo-overlay .time-display {
+      font-family: 'Instrument Serif', serif;
+      font-size: 84px; line-height: 1;
+      font-weight: 400; letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 8px;
+    }
+    .pomo-overlay .state-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; letter-spacing: 0.18em;
+      text-transform: uppercase; opacity: 0.7;
+      margin-bottom: 48px;
+    }
+    .pomo-overlay .controls {
+      display: flex; gap: 12px;
+    }
+    .pomo-overlay .controls button {
+      padding: 14px 28px;
+      border-radius: 999px;
+      font-size: 14px; font-weight: 600;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      backdrop-filter: blur(8px);
+      transition: all 0.2s;
+    }
+    .pomo-overlay .controls button:active { transform: scale(0.96); }
+    .pomo-overlay .controls .close {
+      position: absolute; top: 24px; left: 24px;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* === Cmd+K === */
     .cmdk-overlay {
       position: fixed; inset: 0;
       background: rgba(10,10,10,0.5);
@@ -510,98 +367,22 @@
     }
     .cmdk-overlay.show { opacity: 1; pointer-events: auto; }
     .cmdk-bar {
-      width: 92%;
-      max-width: 560px;
+      width: 92%; max-width: 560px;
       background: var(--surface);
       border-radius: 20px;
-      box-shadow: var(--shadow-lg), 0 0 0 1px var(--border);
+      box-shadow: var(--shadow-lg);
       overflow: hidden;
       transform: translateY(-12px) scale(0.96);
       transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     .cmdk-overlay.show .cmdk-bar { transform: translateY(0) scale(1); }
-    .cmdk-bar .search {
-      display: flex; align-items: center; gap: 12px;
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border);
-    }
+    .cmdk-bar .search { display: flex; align-items: center; gap: 12px; padding: 16px 20px; }
     .cmdk-bar .search svg { color: var(--ink-soft); }
-    .cmdk-bar .search input {
-      flex: 1; border: none; outline: none;
-      font-size: 17px; font-weight: 400;
-      background: transparent;
-    }
-    .cmdk-bar .search kbd {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      padding: 2px 6px;
-      background: var(--ink-ghost);
-      border-radius: 4px;
-      color: var(--ink-soft);
-    }
-    .cmdk-bar .hint {
-      padding: 14px 20px;
-      font-size: 12px;
-      color: var(--ink-soft);
-      line-height: 1.5;
-      text-align: center;
-    }
+    .cmdk-bar .search input { flex: 1; border: none; outline: none; font-size: 17px; background: transparent; }
+    .cmdk-bar .search kbd { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 2px 6px; background: var(--ink-ghost); border-radius: 4px; color: var(--ink-soft); }
 
-    /* Pomodoro sheet */
-    .pomo-overlay {
-      position: fixed; inset: 0;
-      background: rgba(10,10,10,0.4);
-      backdrop-filter: blur(8px);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 100;
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.25s;
-    }
-    .pomo-overlay.show { opacity: 1; pointer-events: auto; }
-    .pomo-card {
-      width: 280px;
-      background: var(--bg);
-      border-radius: 28px;
-      padding: 28px 24px;
-      text-align: center;
-      box-shadow: 0 30px 60px -20px rgba(0,0,0,0.3);
-      transform: scale(0.94);
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    .pomo-overlay.show .pomo-card { transform: scale(1); }
-    .pomo-card .label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--ink-soft);
-      margin-bottom: 8px;
-    }
-    .pomo-card .time {
-      font-family: 'Instrument Serif', serif;
-      font-size: 64px; line-height: 1;
-      font-weight: 400;
-      letter-spacing: -0.03em;
-      font-variant-numeric: tabular-nums;
-      margin: 8px 0 24px;
-    }
-    .pomo-card .controls { display: flex; gap: 8px; justify-content: center; }
-    .pomo-card .controls button {
-      padding: 12px 20px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 600;
-      background: var(--ink-ghost);
-      color: var(--ink);
-    }
-    .pomo-card .controls button.primary {
-      background: var(--ink);
-      color: white;
-    }
-    .pomo-card .controls button:active { transform: scale(0.96); }
-
-    /* Settings sheet (theme + sound) */
-    .settings-overlay {
+    /* === Editor (half-sheet) === */
+    .sheet-overlay {
       position: fixed; inset: 0;
       background: rgba(10,10,10,0.4);
       backdrop-filter: blur(8px);
@@ -610,183 +391,83 @@
       opacity: 0; pointer-events: none;
       transition: opacity 0.25s;
     }
-    .settings-overlay.show { opacity: 1; pointer-events: auto; }
-    .settings-sheet {
-      width: 100%;
-      max-width: 480px;
+    .sheet-overlay.show { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%; max-width: 480px;
       background: var(--bg);
       border-radius: 24px 24px 0 0;
       padding: 20px 24px 32px;
       transform: translateY(100%);
       transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      max-height: 80vh;
-      overflow-y: auto;
+      max-height: 80vh; overflow-y: auto;
     }
-    .settings-overlay.show .settings-sheet { transform: translateY(0); }
-    .settings-sheet .grabber {
-      width: 40px; height: 4px;
-      background: var(--ink-fade);
-      border-radius: 2px;
-      margin: 0 auto 20px;
-    }
-    .settings-sheet h3 {
-      font-family: 'Instrument Serif', serif;
-      font-size: 22px;
-      font-weight: 400;
-      margin-bottom: 16px;
-    }
-    .settings-section { margin-bottom: 24px; }
-    .settings-section .label {
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--ink-soft);
-      font-weight: 600;
-      margin-bottom: 10px;
-    }
-    .accent-row {
-      display: flex; gap: 10px;
-    }
-    .accent-swatch {
-      flex: 1;
-      height: 56px;
-      border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
+    .sheet-overlay.show .sheet { transform: translateY(0); }
+    .sheet .grabber { width: 40px; height: 4px; background: var(--ink-fade); border-radius: 2px; margin: 0 auto 20px; }
+    .sheet h3 { font-family: 'Instrument Serif', serif; font-size: 22px; font-weight: 400; margin-bottom: 16px; }
+    .sheet .field { margin-bottom: 16px; }
+    .sheet .field label { display: block; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; margin-bottom: 6px; }
+    .sheet .field input, .sheet .field textarea {
+      width: 100%; border: none; outline: none;
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 15px;
+      color: var(--ink);
       box-shadow: var(--shadow-sm), 0 0 0 1px var(--border);
     }
-    .accent-swatch:hover { transform: translateY(-2px); }
-    .accent-swatch.active { box-shadow: 0 0 0 2px var(--ink); }
-    .accent-swatch svg { width: 22px; height: 22px; opacity: 0.9; }
-    .accent-swatch.sunset   { background: #FF5733; }
-    .accent-swatch.forest   { background: #2B8A3E; }
-    .accent-swatch.ocean    { background: #0066FF; }
-    .accent-swatch.lavender { background: #6741D9; }
-    .accent-swatch.ink      { background: #0A0A0A; }
-
-    .toggle-row {
-      display: flex; align-items: center; justify-content: space-between;
+    .sheet .field textarea { min-height: 80px; font-family: inherit; resize: vertical; }
+    .sheet .tomato-stepper {
+      display: flex; align-items: center; gap: 12px;
       padding: 12px 14px;
       background: var(--surface);
       border-radius: 12px;
       box-shadow: var(--shadow-sm), 0 0 0 1px var(--border);
     }
-    .toggle-row .left {
-      display: flex; align-items: center; gap: 10px;
-    }
-    .toggle-row .left svg { width: 18px; height: 18px; color: var(--ink); }
-    .toggle-row .left .name { font-size: 14px; font-weight: 500; }
-    .toggle-row .left .desc { font-size: 11px; color: var(--ink-soft); }
-
-    .toggle {
-      width: 44px; height: 26px;
-      background: var(--ink-ghost);
-      border-radius: 13px;
-      position: relative;
-      transition: background 0.2s;
-      cursor: pointer;
-    }
-    .toggle::after {
-      content: '';
-      position: absolute; top: 3px; left: 3px;
-      width: 20px; height: 20px;
-      background: white;
+    .sheet .tomato-stepper button {
+      width: 32px; height: 32px;
       border-radius: 50%;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-      transition: transform 0.2s;
-    }
-    .toggle.on { background: var(--accent); }
-    .toggle.on::after { transform: translateX(18px); }
-
-    /* Reflection modal */
-    .reflect-overlay {
-      position: fixed; inset: 0;
-      background: rgba(10,10,10,0.5);
-      backdrop-filter: blur(12px);
+      background: var(--tomato-soft);
+      color: var(--tomato);
+      font-size: 18px; font-weight: 600;
       display: flex; align-items: center; justify-content: center;
-      z-index: 200;
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.3s;
-      padding: 20px;
     }
-    .reflect-overlay.show { opacity: 1; pointer-events: auto; }
-    .reflect-card {
-      max-width: 360px;
-      background: var(--bg);
-      border-radius: 24px;
-      padding: 32px 24px;
-      text-align: center;
-      box-shadow: 0 30px 60px -20px rgba(0,0,0,0.3);
-      transform: scale(0.95);
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    .sheet .tomato-stepper button:active { transform: scale(0.92); }
+    .sheet .tomato-stepper .val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 24px; font-weight: 600;
+      flex: 1; text-align: center;
     }
-    .reflect-overlay.show .reflect-card { transform: scale(1); }
-    .reflect-card .icon-circle {
-      width: 56px; height: 56px;
-      border-radius: 50%;
-      background: var(--accent-soft);
-      color: var(--accent);
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 16px;
+    .sheet .cat-row { display: flex; gap: 8px; }
+    .sheet .cat-row button {
+      flex: 1; padding: 12px;
+      border-radius: 10px;
+      background: var(--surface);
+      box-shadow: var(--shadow-sm), 0 0 0 1px var(--border);
+      display: flex; flex-direction: column;
+      align-items: center; gap: 4px;
+      transition: all 0.15s;
     }
-    .reflect-card .icon-circle svg { width: 24px; height: 24px; }
-    .reflect-card .title {
-      font-family: 'Instrument Serif', serif;
-      font-size: 24px;
-      font-weight: 400;
-      margin-bottom: 8px;
-      letter-spacing: -0.01em;
-    }
-    .reflect-card .sub {
-      font-size: 13px;
-      color: var(--ink-soft);
-      line-height: 1.5;
-      margin-bottom: 20px;
-    }
-    .reflect-card .actions {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .reflect-card .actions button {
-      padding: 12px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 600;
-      background: var(--ink-ghost);
-      color: var(--ink);
-    }
-    .reflect-card .actions button.primary {
-      background: var(--ink);
-      color: white;
-    }
-    .reflect-card .actions button:active { transform: scale(0.96); }
+    .sheet .cat-row button.active { box-shadow: 0 0 0 2px var(--ink); }
+    .sheet .cat-row svg { width: 18px; height: 18px; }
+    .sheet .cat-row .lbl { font-size: 10px; color: var(--ink-soft); font-weight: 600; }
+    .sheet .actions { display: flex; gap: 8px; margin-top: 16px; }
+    .sheet .actions button { flex: 1; padding: 14px; border-radius: 14px; font-size: 14px; font-weight: 600; background: var(--ink-ghost); color: var(--ink); }
+    .sheet .actions button.primary { background: var(--ink); color: white; }
+    .sheet .actions button:active { transform: scale(0.97); }
+    .sheet .actions button.danger { color: #E84A3D; }
 
-    /* Toast */
+    /* === Toast === */
     .toast {
-      position: fixed;
-      bottom: 100px;
-      left: 50%;
+      position: fixed; bottom: 100px; left: 50%;
       transform: translateX(-50%) translateY(40px);
-      background: var(--ink);
-      color: white;
-      padding: 10px 18px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 500;
-      opacity: 0;
-      transition: opacity 0.25s, transform 0.25s;
-      pointer-events: none;
-      z-index: 300;
+      background: var(--ink); color: white;
+      padding: 10px 18px; border-radius: 12px;
+      font-size: 13px; font-weight: 500;
+      opacity: 0; transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none; z-index: 300;
       box-shadow: 0 8px 24px -4px rgba(0,0,0,0.2);
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-    /* Day transition */
-    .list-area.day-in { animation: dayIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
-    .list-area.day-out { animation: dayOut 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
-    @keyframes dayIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-    @keyframes dayOut { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
   </style>
 </head>
 <body data-accent="sunset">
@@ -802,52 +483,39 @@
 
     <div class="header">
       <div class="top">
-        <div class="brand">Today · 今日</div>
+        <div class="brand">Fanqie · 今日</div>
         <div class="actions">
-          <button id="focusBtn" aria-label="Focus mode" title="Two things focus mode">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
+          <button id="historyBtn" title="History">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </button>
-          <button id="settingsBtn" aria-label="Settings" title="Settings">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          </button>
-          <button id="prevBtn" aria-label="前一天">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-          </button>
-          <button id="nextBtn" aria-label="后一天">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          <button id="settingsBtn" title="Settings">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 10v6M4.22 4.22l4.24 4.24m7.08 7.08l4.24 4.24M1 12h6m10 0h6M4.22 19.78l4.24-4.24m7.08-7.08l4.24-4.24"/></svg>
           </button>
         </div>
       </div>
       <div class="greeting" id="greeting">Good morning</div>
-      <h1 class="headline" id="headline">Make today<br><em>count</em>.</h1>
+      <h1 class="headline" id="headline">A few <em>tomatoes</em><br>to harvest.</h1>
       <div class="meta">
         <span id="weekday">Wednesday</span>
         <span class="dot"></span>
         <span id="dateText">June 3</span>
         <span class="dot"></span>
         <span id="timeText">9:41</span>
-        <span class="dot"></span>
-        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--ink-ghost);padding:2px 6px;border-radius:4px">⌘K</span>
       </div>
     </div>
 
-    <div class="bento" id="bentoGrid">
-      <div class="card hero clickable" id="heroCard">
-        <div class="ring-mini"></div>
-        <div class="label">今日完成</div>
+    <div class="bento">
+      <div class="card hero clickable" id="heroCard" title="Start a focus session">
+        <div class="label">Today</div>
         <div class="pct" id="pct">0</div>
-        <div class="sub" id="heroSub">开始新的一天</div>
+        <div class="sub" id="heroSub">一个一个来</div>
       </div>
       <div class="card small">
-        <div class="label">Tasks</div>
-        <div class="val" id="taskCount">0<small>项</small></div>
-        <div class="delta neutral" id="taskDelta">添加开始</div>
+        <div class="label">Harvested</div>
+        <div class="val" id="tomatoCount">0<small>🍅</small></div>
+        <div class="delta neutral" id="tomatoDelta">从第一个开始</div>
       </div>
       <div class="card small">
-        <div class="freeze-token" id="freezeToken" title="Use freeze to keep streak">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
-          <span id="freezeCount">2</span>
-        </div>
         <div class="label">Streak</div>
         <div class="val" id="streakCount">0<small>天</small></div>
         <div class="delta neutral" id="streakDelta">开始你的连胜</div>
@@ -856,23 +524,19 @@
 
     <div class="list-area" id="listArea">
       <div class="empty hidden" id="emptyState">
-        <svg class="art" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="100" cy="80" r="50" fill="#F0EDE6"/>
-          <rect x="20" y="135" width="160" height="3" fill="currentColor" opacity="0.08"/>
-          <rect x="40" y="138" width="120" height="40" fill="#F0EDE6" rx="2"/>
-          <rect x="65" y="115" width="70" height="40" fill="#FFFFFF" stroke="currentColor" stroke-width="1.5" rx="2"/>
-          <rect x="65" y="115" width="70" height="2" fill="currentColor"/>
-          <rect x="58" y="155" width="84" height="3" fill="currentColor" rx="1.5"/>
-          <path d="M28 130 L34 150 Q34 154 38 154 L42 154 Q46 154 46 150 L52 130 Z" fill="var(--accent)"/>
-          <path d="M50 132 Q58 132 58 140 Q58 148 50 148" stroke="var(--accent)" stroke-width="1.5" fill="none"/>
-          <path d="M36 122 Q34 117 38 114" stroke="currentColor" stroke-width="1" opacity="0.3" stroke-linecap="round"/>
-          <path d="M42 124 Q40 119 44 116" stroke="currentColor" stroke-width="1" opacity="0.3" stroke-linecap="round"/>
-          <rect x="140" y="148" width="14" height="12" fill="#2B8A3E" opacity="0.8" rx="1"/>
-          <path d="M147 148 Q147 138 152 132 Q142 138 142 148" fill="#2B8A3E"/>
-          <path d="M147 148 Q147 138 142 132 Q152 138 152 148" fill="#3DA94E"/>
+        <svg class="art" viewBox="0 0 200 200" fill="none">
+          <circle cx="100" cy="100" r="60" fill="var(--tomato)" opacity="0.15"/>
+          <circle cx="100" cy="100" r="50" fill="var(--tomato)" opacity="0.5"/>
+          <circle cx="100" cy="100" r="42" fill="var(--tomato)"/>
+          <path d="M100 60 Q90 50 100 42 Q110 50 100 60" fill="#2B8A3E"/>
+          <path d="M100 60 Q98 45 100 30 Q103 45 100 60" fill="#3DA94E"/>
         </svg>
-        <div class="title">Nothing on the list.</div>
-        <div class="sub">A clean page is a beautiful thing. Press <strong>⌘K</strong> or tap below to begin.</div>
+        <div class="title">A blank garden.</div>
+        <div class="sub">Add your first task. How many <strong>tomatoes</strong> will it take?</div>
+      </div>
+      <div class="section-label" id="tasksLabel">
+        <span class="label">Tasks</span>
+        <span class="count" id="taskCount">0</span>
       </div>
       <div id="taskList"></div>
     </div>
@@ -881,10 +545,7 @@
       <svg class="plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
       </svg>
-      <input type="text" id="taskInput" placeholder="Add a task..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <button class="time-pill" id="addTimeBtn" title="Add due time" style="display:flex;align-items:center;gap:3px;padding:6px 8px;background:transparent;border-radius:8px;color:var(--ink-soft);font-size:11px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      </button>
+      <input type="text" id="taskInput" placeholder="What needs tomatoes?" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <button class="submit" id="submitBtn" disabled aria-label="添加">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
@@ -893,383 +554,272 @@
     </div>
   </div>
 
-  <!-- Cmd+K Command Bar -->
-  <div class="cmdk-overlay" id="cmdkOverlay">
-    <div class="cmdk-bar">
-      <div class="search">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="cmdkInput" placeholder="Add a task, jump to day, or search..." autocomplete="off"/>
-        <kbd>ESC</kbd>
-      </div>
-      <div class="hint" id="cmdkHint">
-        💡 <strong>Tip:</strong> 写「明天下午3点开会」自动识别时间和日期<br>
-        写「每周复习」自动创建重复任务
+  <!-- Pomodoro (full screen, like early Fanqie) -->
+  <div class="pomo-overlay" id="pomoOverlay">
+    <button class="controls close" id="pomoClose" aria-label="Close">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="pomo-content">
+      <div class="task-name" id="pomoTaskName">—</div>
+      <svg class="tomato-art" viewBox="0 0 200 200">
+        <defs>
+          <radialGradient id="tomatoGrad" cx="35%" cy="35%">
+            <stop offset="0%" stop-color="#FF8578"/>
+            <stop offset="100%" stop-color="#E84A3D"/>
+          </radialGradient>
+          <radialGradient id="tomatoGradFading" cx="35%" cy="35%">
+            <stop offset="0%" stop-color="#FF8578" stop-opacity="0.5"/>
+            <stop offset="100%" stop-color="#E84A3D" stop-opacity="0.5"/>
+          </radialGradient>
+        </defs>
+        <circle cx="100" cy="110" r="80" fill="url(#tomatoGrad)"/>
+        <ellipse cx="80" cy="80" rx="20" ry="14" fill="#FFA399" opacity="0.5"/>
+        <path d="M100 50 Q80 30 100 20 Q120 30 100 50" fill="#2B8A3E"/>
+        <path d="M100 50 Q95 30 100 5 Q108 30 100 50" fill="#3DA94E"/>
+        <path d="M100 50 L100 30" stroke="#1F5C2A" stroke-width="2" stroke-linecap="round"/>
+        <!-- progress ring around the tomato -->
+        <circle id="pomoRing" cx="100" cy="110" r="90" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="3"/>
+      </svg>
+      <div class="time-display" id="pomoTime">25:00</div>
+      <div class="state-label" id="pomoState">Tap to start · 25 min</div>
+      <div class="controls">
+        <button id="pomoReset">Reset</button>
+        <button id="pomoToggle">Start</button>
+        <button id="pomoComplete">Done</button>
       </div>
     </div>
   </div>
 
-  <!-- Pomodoro -->
-  <div class="pomo-overlay" id="pomoOverlay">
-    <div class="pomo-card">
-      <div class="label">Focus session</div>
-      <div class="time" id="pomoTime">25:00</div>
-      <div class="controls">
-        <button id="pomoReset">Reset</button>
-        <button id="pomoToggle" class="primary">Start</button>
+  <!-- Cmd+K -->
+  <div class="cmdk-overlay" id="cmdkOverlay">
+    <div class="cmdk-bar">
+      <div class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="cmdkInput" placeholder="Add a task..." autocomplete="off"/>
+        <kbd>ESC</kbd>
+      </div>
+    </div>
+  </div>
+
+  <!-- Editor half-sheet -->
+  <div class="sheet-overlay" id="sheetOverlay">
+    <div class="sheet" id="sheet">
+      <div class="grabber"></div>
+      <h3 id="sheetTitle">Edit task</h3>
+
+      <div class="field">
+        <label>Name</label>
+        <input type="text" id="editName" placeholder="What needs to be done?">
+      </div>
+
+      <div class="field">
+        <label>Note</label>
+        <textarea id="editNote" placeholder="Optional details..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>Tomatoes (estimated effort)</label>
+        <div class="tomato-stepper">
+          <button id="tomatoMinus">−</button>
+          <div class="val" id="tomatoVal">1 🍅</div>
+          <button id="tomatoPlus">+</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Category</label>
+        <div class="cat-row">
+          <button data-cat="work" class="cat-work">
+            <svg viewBox="0 0 256 256" fill="none" stroke="#FF5733" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"><rect x="32" y="72" width="192" height="144" rx="8"/><path d="M168 72V48a16 16 0 0 0-16-16h-48a16 16 0 0 0-16 16v24"/></svg>
+            <span class="lbl">Work</span>
+          </button>
+          <button data-cat="learn" class="cat-learn">
+            <svg viewBox="0 0 256 256" fill="none" stroke="#0066FF" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"><path d="M48 216V48a8 8 0 0 1 8-8h144a8 8 0 0 1 8 8v168"/><path d="M48 216a8 8 0 0 1 8-8h144"/></svg>
+            <span class="lbl">Learn</span>
+          </button>
+          <button data-cat="life" class="cat-life">
+            <svg viewBox="0 0 256 256" fill="none" stroke="#2B8A3E" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"><path d="M128 224V128"/><path d="M128 128c0-30 8-56 24-72s42-24 72-24c0 30-8 56-24 72s-42 24-72 24z"/></svg>
+            <span class="lbl">Life</span>
+          </button>
+          <button data-cat="other" class="cat-other">
+            <svg viewBox="0 0 256 256" fill="none" stroke="#6741D9" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"><path d="M128 32v64M128 160v64M32 128h64M160 128h64M72 72l40 40M144 144l40 40M184 72l-40 40M112 144l-40 40"/></svg>
+            <span class="lbl">Other</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="sheetDelete" class="danger">Delete</button>
+        <button id="sheetSave" class="primary">Save</button>
       </div>
     </div>
   </div>
 
   <!-- Settings -->
-  <div class="settings-overlay" id="settingsOverlay">
-    <div class="settings-sheet">
+  <div class="sheet-overlay" id="settingsOverlay">
+    <div class="sheet" id="settingsSheet">
       <div class="grabber"></div>
       <h3>Settings</h3>
-
-      <div class="settings-section">
-        <div class="label">Accent color</div>
-        <div class="accent-row">
-          <div class="accent-swatch sunset active" data-accent="sunset"></div>
-          <div class="accent-swatch forest" data-accent="forest"></div>
-          <div class="accent-swatch ocean" data-accent="ocean"></div>
-          <div class="accent-swatch lavender" data-accent="lavender"></div>
-          <div class="accent-swatch ink" data-accent="ink"></div>
+      <div class="field">
+        <label>Accent</label>
+        <div class="cat-row">
+          <div style="height:40px;border-radius:10px;background:#FF5733;cursor:pointer" data-accent="sunset" class="swatch"></div>
+          <div style="height:40px;border-radius:10px;background:#2B8A3E;cursor:pointer" data-accent="forest" class="swatch"></div>
+          <div style="height:40px;border-radius:10px;background:#0066FF;cursor:pointer" data-accent="ocean" class="swatch"></div>
+          <div style="height:40px;border-radius:10px;background:#6741D9;cursor:pointer" data-accent="lavender" class="swatch"></div>
+          <div style="height:40px;border-radius:10px;background:#0A0A0A;cursor:pointer" data-accent="ink" class="swatch"></div>
         </div>
       </div>
-
-      <div class="settings-section">
-        <div class="label">Feedback</div>
-        <div class="toggle-row">
-          <div class="left">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-            <div>
-              <div class="name">Sound</div>
-              <div class="desc">Subtle ticks on task complete</div>
-            </div>
-          </div>
-          <div class="toggle on" id="soundToggle"></div>
-        </div>
-        <div class="toggle-row" style="margin-top:8px">
-          <div class="left">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-            <div>
-              <div class="name">Haptics</div>
-              <div class="desc">Vibration on mobile</div>
-            </div>
-          </div>
-          <div class="toggle on" id="hapticsToggle"></div>
-        </div>
-      </div>
-
-      <div class="settings-section">
-        <div class="label">Data</div>
-        <div class="toggle-row">
-          <div class="left">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            <div>
-              <div class="name">Export data</div>
-              <div class="desc">Download all tasks as JSON</div>
-            </div>
-          </div>
-          <button id="exportBtn" style="font-size:13px;font-weight:600;color:var(--accent)">Export</button>
+      <div class="field">
+        <label>Focus duration</label>
+        <div class="cat-row">
+          <button data-foco="20" class="dur-btn"><span class="lbl">20m</span></button>
+          <button data-foco="25" class="dur-btn"><span class="lbl">25m</span></button>
+          <button data-foco="30" class="dur-btn"><span class="lbl">30m</span></button>
+          <button data-foco="45" class="dur-btn"><span class="lbl">45m</span></button>
+          <button data-foco="60" class="dur-btn"><span class="lbl">60m</span></button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Reflection -->
-  <div class="reflect-overlay" id="reflectOverlay">
-    <div class="reflect-card">
-      <div class="icon-circle">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      </div>
-      <div class="title" id="reflectTitle">A new day is here.</div>
-      <div class="sub" id="reflectSub">You finished <strong id="reflectDone">0 of 0</strong> yesterday.<br>What would you like to do with what's left?</div>
-      <div class="actions">
-        <button id="reflectCarryOver">Carry them over</button>
-        <button id="reflectLetGo" class="primary">Let them go</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast">Added</div>
+  <div class="toast" id="toast">Saved</div>
 
   <script>
     /* ============================================================
-       Today v4 — 9 new features
+       Fanqie v5 — Early architecture
+       Tables: tasks (flat) + tomatoes (log) + settings
+       Pomodoro per-task. Drag-to-reorder. Half-sheet editor.
        ============================================================ */
-    const STORAGE_KEY = 'today.tasks.v4';
-    const DATE_KEY = 'today.currentDate.v4';
-    const POMO_KEY = 'today.pomodoro.v4';
-    const STREAK_KEY = 'today.streak.v4';
-    const FREEZE_KEY = 'today.freeze.v4';
-    const SEEN_KEY = 'today.seenHint.v4';
-    const SETTINGS_KEY = 'today.settings.v4';
-    const LAST_VISIT_KEY = 'today.lastVisit.v4';
 
-    let tasksByDate = loadTasks();
-    let currentDate = loadCurrentDate();
-    let pomoState = loadPomoState();
-    let settings = loadSettings();
-    let freezeState = loadFreeze();
-    let focusMode = false;
-    let pendingTaskTime = null;
+    const TASKS_KEY = 'fanqie.tasks.v5';
+    const TOMATOES_KEY = 'fanqie.tomatoes.v5';
+    const POMO_KEY = 'fanqie.pomodoro.v5';
+    const STREAK_KEY = 'fanqie.streak.v5';
+    const SETTINGS_KEY = 'fanqie.settings.v5';
 
-    // Apply accent + settings
+    let tasks = loadJSON(TASKS_KEY, []);
+    let tomatoes = loadJSON(TOMATOES_KEY, []);
+    let settings = loadJSON(SETTINGS_KEY, { accent: 'sunset', focusDuration: 25 * 60, sound: true });
+    let pomo = loadJSON(POMO_KEY, { taskId: null, remaining: 25 * 60, duration: 25 * 60, running: false, startedAt: null });
+    let editingTaskId = null;
+    let audioCtx = null;
+
     applySettings();
 
-    /* === Phosphor-style thin icons === */
-    const ICONS = {
-      briefcase: '<svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><rect x="32" y="72" width="192" height="144" rx="8"/><path d="M168 72V48a16 16 0 0 0-16-16h-48a16 16 0 0 0-16 16v24"/><line x1="32" y1="144" x2="224" y2="144"/></svg>',
-      book: '<svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><path d="M48 216V48a8 8 0 0 1 8-8h144a8 8 0 0 1 8 8v168"/><path d="M48 216a8 8 0 0 1 8-8h144"/><line x1="80" y1="88" x2="176" y2="88"/><line x1="80" y1="120" x2="176" y2="120"/></svg>',
-      leaf: '<svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><path d="M128 224V128"/><path d="M128 128c0-30 8-56 24-72s42-24 72-24c0 30-8 56-24 72s-42 24-72 24z"/><path d="M128 128c-30 0-56-8-72-24s-24-42-24-72"/></svg>',
-      spark: '<svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><path d="M128 32v64M128 160v64M32 128h64M160 128h64M72 72l40 40M144 144l40 40M184 72l-40 40M112 144l-40 40"/></svg>',
-      clock: '<svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><circle cx="128" cy="128" r="96"/><polyline points="128 72 128 128 168 152"/></svg>',
-      check: '<polyline points="88 136 112 160 168 104" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>',
-      trash: '<svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><line x1="216" y1="56" x2="40" y2="56"/><line x1="104" y1="104" x2="104" y2="168"/><line x1="152" y1="104" x2="152" y2="168"/><path d="M200 56v152a8 8 0 0 1-8 8H64a8 8 0 0 1-8-8V56"/><path d="M168 56V40a16 16 0 0 0-16-16h-48a16 16 0 0 0-16 16v16"/></svg>',
-      repeat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg>',
-    };
+    function loadJSON(k, def) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? def : v; } catch { return def; } }
+    function saveJSON(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+    function uid() { return 't' + Date.now() + Math.random().toString(36).slice(2, 7); }
+    function dateKey(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+    function todayKey() { return dateKey(new Date()); }
+    function fmtTime(sec) { const m = Math.floor(sec / 60); const s = sec % 60; return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0'); }
 
-    const CATEGORIES = {
-      work:  { icon: ICONS.briefcase, label: 'Work',  color: '#FFF0EB', iconColor: '#FF5733' },
-      learn: { icon: ICONS.book,      label: 'Learn', color: '#EBF4FF', iconColor: '#0066FF' },
-      life:  { icon: ICONS.leaf,      label: 'Life',  color: '#EDF7EC', iconColor: '#2B8A3E' },
-      other: { icon: ICONS.spark,     label: 'Other', color: '#F5F0FF', iconColor: '#6741D9' }
-    };
-
-    /* === NLP: parse time + date + recurrence === */
-    function parseTaskInput(text) {
-      const result = { text, dueTime: null, dueDate: currentDate, recurring: null };
-      let working = text;
-
-      // Time patterns: "3pm" "3:30 pm" "15:00" "下午3点" "15:30"
-      const timeRe = /(\d{1,2})(?::(\d{2}))?\s*(am|pm|AM|PM)?|下午(\d{1,2})点(?:(\d{1,2})分)?|上午(\d{1,2})点|(\d{1,2}):(\d{2})/;
-      const m = working.match(timeRe);
-      if (m) {
-        let h, min = 0;
-        if (m[7]) { h = +m[7]; min = +m[8]; }
-        else if (m[4]) { h = +m[4] + 12; min = m[5] ? +m[5] : 0; }
-        else if (m[6]) { h = +m[6]; }
-        else { h = +m[1]; min = m[2] ? +m[2] : 0; if (m[3] && m[3].toLowerCase()==='pm' && h<12) h+=12; }
-        if (h >= 0 && h < 24) {
-          result.dueTime = String(h).padStart(2, '0') + ':' + String(min).padStart(2, '0');
-          working = working.replace(m[0], '').trim();
-        }
-      }
-
-      // Date patterns
-      if (/明天|tomorrow/i.test(working)) {
-        result.dueDate = dayOffset(currentDate, 1); working = working.replace(/(明天|tomorrow)/i, '').trim();
-      } else if (/后天/i.test(working)) {
-        result.dueDate = dayOffset(currentDate, 2); working = working.replace(/后天/i, '').trim();
-      } else if (/下周|next week/i.test(working)) {
-        result.dueDate = dayOffset(currentDate, 7); working = working.replace(/(下周|next week)/i, '').trim();
-      }
-
-      // Recurring
-      if (/每天|daily|every day/i.test(working)) {
-        result.recurring = 'daily'; working = working.replace(/(每天|daily|every day)/i, '').trim();
-      } else if (/每周|weekly|every week/i.test(working)) {
-        result.recurring = 'weekly'; working = working.replace(/(每周|weekly|every week)/i, '').trim();
-      } else if (/工作日|weekdays/i.test(working)) {
-        result.recurring = 'weekdays'; working = working.replace(/(工作日|weekdays)/i, '').trim();
-      } else if (/每月|monthly/i.test(working)) {
-        result.recurring = 'monthly'; working = working.replace(/(每月|monthly)/i, '').trim();
-      }
-
-      result.text = working || text;
-      return result;
-    }
-
-    function autoCategory(text) {
-      if (/工作|会议|邮件|写|报告|项目|客户|deadline|公司|联系/.test(text)) return 'work';
-      if (/学|读|书|課|练习|背|复习|英语|编程|代码|course|book/.test(text)) return 'learn';
-      if (/吃|饭|睡|运动|跑|健|家|休息|买|玩|咖啡|茶|散步|gym|meditation/.test(text)) return 'life';
-      return 'other';
-    }
-
-    /* === Storage === */
-    function loadTasks() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; } }
-    function saveTasks() { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasksByDate)); }
-    function loadCurrentDate() { return localStorage.getItem(DATE_KEY) || dateKey(new Date()); }
-    function saveCurrentDate() { localStorage.setItem(DATE_KEY, currentDate); }
-    function loadPomoState() { try { return JSON.parse(localStorage.getItem(POMO_KEY)) || { duration: 25*60, remaining: 25*60, running: false }; } catch { return { duration: 25*60, remaining: 25*60, running: false }; } }
-    function savePomoState() { localStorage.setItem(POMO_KEY, JSON.stringify(pomoState)); }
-    function loadStreak() { try { return JSON.parse(localStorage.getItem(STREAK_KEY)) || { lastDate: null, count: 0 }; } catch { return { lastDate: null, count: 0 }; } }
-    function saveStreak(s) { localStorage.setItem(STREAK_KEY, JSON.stringify(s)); }
-    function loadFreeze() { try { return JSON.parse(localStorage.getItem(FREEZE_KEY)) || { count: 2, weekRefill: getWeekKey() }; } catch { return { count: 2, weekRefill: getWeekKey() }; } }
-    function saveFreeze() { localStorage.setItem(FREEZE_KEY, JSON.stringify(freezeState)); }
-    function loadSettings() { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || { accent: 'sunset', sound: true, haptics: true }; } catch { return { accent: 'sunset', sound: true, haptics: true }; } }
-    function saveSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
     function applySettings() {
       document.body.setAttribute('data-accent', settings.accent);
-      document.getElementById('soundToggle').classList.toggle('on', settings.sound);
-      document.getElementById('hapticsToggle').classList.toggle('on', settings.haptics);
+      pomo.duration = settings.focusDuration;
+      if (!pomo.taskId) pomo.remaining = settings.focusDuration;
     }
 
-    function getWeekKey() {
-      const d = new Date();
-      const onejan = new Date(d.getFullYear(), 0, 1);
-      return Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
-    }
-    function dateKey(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-    function parseDateKey(s) { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
-    function isToday(s) { return s === dateKey(new Date()); }
-    function dayOffset(s, d) { const x = parseDateKey(s); x.setDate(x.getDate() + d); return dateKey(x); }
-
-    /* === Sound + haptics === */
-    let audioCtx = null;
-    function playSound(type) {
-      if (!settings.sound) return;
-      try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const o = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        o.connect(g); g.connect(audioCtx.destination);
-        g.gain.setValueAtTime(0, audioCtx.currentTime);
-        if (type === 'tick') {
-          o.frequency.value = 1200;
-          g.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 0.005);
-          g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
-          o.start(); o.stop(audioCtx.currentTime + 0.1);
-        } else if (type === 'chime') {
-          o.frequency.value = 880;
-          g.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime + 0.01);
-          g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-          o.start(); o.stop(audioCtx.currentTime + 0.5);
-        }
-      } catch (e) {}
-    }
-    function haptic() {
-      if (!settings.haptics) return;
-      if (navigator.vibrate) navigator.vibrate(8);
+    /* === Today's tomatoes (the log query) === */
+    function todayTomatoes() {
+      const today = todayKey();
+      return tomatoes.filter(t => t.date === today);
     }
 
-    /* === Render === */
+    function harvestedToday(taskId) {
+      return todayTomatoes().filter(t => t.taskId === taskId && t.completed).length;
+    }
+
+    /* === Rendering === */
     function render() {
-      const isT = isToday(currentDate);
+      // Header
       document.getElementById('greeting').textContent = pickGreeting();
-      document.getElementById('headline').innerHTML = isT ? 'Make today<br><em>count</em>.' : 'Review <em>' + dayName(currentDate) + '</em>';
-      document.getElementById('weekday').textContent = dayName(currentDate);
-      document.getElementById('dateText').textContent = dayDate(currentDate);
+      const d = new Date();
+      document.getElementById('weekday').textContent = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()];
+      document.getElementById('dateText').textContent = ['January','February','March','April','May','June','July','August','September','October','November','December'][d.getMonth()] + ' ' + d.getDate();
 
-      const tasks = (tasksByDate[currentDate] || []).slice();
-      tasks.sort((a, b) => {
-        // Sort: undone first (by time if present), then done
-        if (a.done !== b.done) return a.done ? 1 : -1;
-        if (!a.done && a.dueTime && b.dueTime) return a.dueTime.localeCompare(b.dueTime);
-        if (!a.done && a.dueTime) return -1;
-        if (!a.done && b.dueTime) return 1;
-        return a.order - b.order;
-      });
-      const undone = tasks.filter(t => !t.done);
-      const done = tasks.filter(t => t.done);
-      const total = tasks.length;
-      const doneCount = done.length;
-      const pct = total === 0 ? 0 : Math.round(doneCount / total * 100);
+      // Bento
+      const tList = todayTasks();
+      const total = tList.length;
+      const doneCount = tList.filter(t => t.completed).length;
+      const totalExpected = tList.reduce((s, t) => s + t.expected, 0);
+      const totalHarvested = tList.reduce((s, t) => s + t.harvested, 0);
+      const harvestedPct = totalExpected > 0 ? Math.round(totalHarvested / totalExpected * 100) : 0;
+      const donePct = total > 0 ? Math.round(doneCount / total * 100) : 0;
 
-      document.getElementById('pct').textContent = pct;
+      document.getElementById('pct').textContent = harvestedPct;
       document.getElementById('heroSub').textContent =
-        total === 0 ? '开始新的一天' :
-        pct === 100 ? 'All done · 干得漂亮' :
-        pct >= 50 ? 'Continuing strong' : '起步阶段';
-      document.getElementById('taskCount').innerHTML = total + '<small>项</small>';
-      document.getElementById('taskDelta').textContent = undone.length === 0 && total > 0 ? '已全部完成' : (total === 0 ? '添加开始' : undone.length + ' 项进行中');
-      document.getElementById('taskDelta').className = 'delta ' + (undone.length === 0 && total > 0 ? 'neutral' : '');
+        total === 0 ? '添加一个任务开始' :
+        doneCount === total ? '全部完成 · 干得漂亮' :
+        doneCount > 0 ? `${totalHarvested}/${totalExpected} 🍅` : '开始第一个番茄';
+      document.getElementById('tomatoCount').innerHTML = totalHarvested + '<small>🍅</small>';
+      document.getElementById('tomatoDelta').textContent = totalHarvested === 0 ? '从第一个开始' : `今天 ${totalHarvested} 个`;
+      document.getElementById('tomatoDelta').className = 'delta ' + (totalHarvested === 0 ? 'neutral' : '');
 
-      // Streak + freeze
+      // Streak
       const streak = computeStreak();
-      document.getElementById('streakCount').innerHTML = streak.count + '<small>天</small>';
-      document.getElementById('streakDelta').textContent = streak.count > 0 ? '保持节奏' : '开始你的连胜';
-      document.getElementById('streakDelta').className = 'delta ' + (streak.count === 0 ? 'neutral' : '');
+      document.getElementById('streakCount').innerHTML = streak + '<small>天</small>';
+      document.getElementById('streakDelta').textContent = streak > 0 ? '保持节奏' : '开始你的连胜';
+      document.getElementById('streakDelta').className = 'delta ' + (streak === 0 ? 'neutral' : '');
 
-      // Freeze refills weekly
-      const wk = getWeekKey();
-      if (freezeState.weekRefill !== wk) {
-        freezeState = { count: 2, weekRefill: wk };
-        saveFreeze();
-      }
-      document.getElementById('freezeCount').textContent = freezeState.count;
-      document.getElementById('freezeToken').classList.toggle('disabled', freezeState.count === 0);
-
-      // List
+      // Tasks list
       const list = document.getElementById('taskList');
       const empty = document.getElementById('emptyState');
+      document.getElementById('taskCount').textContent = total;
       if (total === 0) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
       empty.classList.add('hidden');
 
-      // Focus mode: limit to top 2
-      let undoneShow = undone;
-      let hiddenCount = 0;
-      if (focusMode && undone.length > 2) {
-        undoneShow = undone.slice(0, 2);
-        hiddenCount = undone.length - 2;
-      }
-
-      let html = '';
-      if (undoneShow.length > 0) {
-        html += `<div class="section-label"><span class="label">${focusMode ? 'Focus' : 'To do'}</span><span class="count">${undoneShow.length}${hiddenCount ? ' / ' + undone.length : ''}</span></div>`;
-        undoneShow.forEach(t => html += renderCard(t));
-        if (hiddenCount > 0) {
-          html += `<div class="section-label" style="cursor:pointer" id="exitFocusLink"><span class="label">+ ${hiddenCount} more · Exit focus mode</span></div>`;
-        }
-      } else if (focusMode) {
-        html += `<div style="text-align:center;padding:40px 20px;color:var(--ink-soft);font-size:13px">Focus mode active · Everything done ✓</div>`;
-      }
-      if (!focusMode && done.length > 0) {
-        html += `<div class="section-label"><span class="label">Done</span><span class="count">${done.length}</span></div>`;
-        done.sort((a,b) => (b.doneAt||0) - (a.doneAt||0)).forEach(t => html += renderCard(t));
-      }
-      list.innerHTML = html;
-      attachCardHandlers();
-      const exitLink = document.getElementById('exitFocusLink');
-      if (exitLink) exitLink.addEventListener('click', toggleFocusMode);
+      list.innerHTML = tList.map(t => renderRow(t)).join('');
+      attachRowHandlers();
     }
 
-    function renderCard(t) {
-      const cat = CATEGORIES[t.category] || CATEGORIES.other;
-      const ago = t.doneAt ? formatTimeAgo(t.doneAt) : (t.createdAt ? formatTimeAgo(t.createdAt) : '');
-      const timeStr = t.dueTime ? formatTime12h(t.dueTime) : '';
+    /* Today's tasks: created today, not deleted */
+    function todayTasks() {
+      const today = todayKey();
+      return tasks
+        .filter(t => t.date === today)
+        .sort((a, b) => a.order - b.order);
+    }
+
+    function renderRow(t) {
+      const dots = renderTomatoDots(t.expected, t.harvested);
+      const isRunning = pomo.taskId === t.id && pomo.running;
       return `
-        <div class="task-card ${t.done ? 'done' : ''}" data-id="${t.id}">
-          <div class="swipe-bg-left">${ICONS.trash}</div>
-          <div class="swipe-bg-right">${ICONS.check}</div>
-          <div class="icon ${t.category||'other'}" style="background:${cat.color};color:${cat.iconColor}">${cat.icon}</div>
-          <div class="body">
-            <div class="text">${escapeHtml(t.text)}</div>
-            <div class="meta">
-              ${t.recurring ? `<span class="recurring">${ICONS.repeat}<span>${recurringLabel(t.recurring)}</span></span>` : ''}
-              ${timeStr ? `<span class="time-pill">${ICONS.clock}<span>${timeStr}</span></span>` : ''}
-              <span class="tag">${cat.label}</span>
-              ${ago ? `<span style="display:inline-flex;align-items:center;gap:3px;opacity:0.7">${ago}</span>` : ''}
-            </div>
+        <div class="task-row ${t.completed ? 'done' : ''}" data-id="${t.id}">
+          <div class="handle" data-handle>
+            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
           </div>
-          <div class="check">${ICONS.check}</div>
+          <div class="icon ${t.category}">
+            <svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="20" stroke-linecap="round" stroke-linejoin="round">${CAT_SVG[t.category] || CAT_SVG.other}</svg>
+          </div>
+          <div class="body">
+            <div class="text">${escapeHtml(t.name)}</div>
+            <div class="tomatocount">${dots}</div>
+          </div>
+          <button class="quickstart ${isRunning ? 'running' : ''}" data-quickstart aria-label="Start focus">
+            ${isRunning
+              ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>'
+              : '🍅'}
+          </button>
         </div>
       `;
     }
 
-    function recurringLabel(r) {
-      return { daily: 'Daily', weekly: 'Weekly', weekdays: 'Weekdays', monthly: 'Monthly' }[r] || r;
+    function renderTomatoDots(expected, harvested) {
+      let html = '';
+      for (let i = 0; i < expected; i++) {
+        const filled = i < harvested;
+        html += `<span class="tomato ${filled ? 'filled' : 'empty'}">${filled ? '🍅' : '○'}</span>`;
+      }
+      return html;
     }
 
-    function formatTime12h(t) {
-      if (!t) return '';
-      const [h, m] = t.split(':').map(Number);
-      const period = h >= 12 ? 'PM' : 'AM';
-      const h12 = h % 12 === 0 ? 12 : h % 12;
-      return `${h12}:${String(m).padStart(2, '0')} ${period}`;
-    }
-
-    function formatTimeAgo(ts) {
-      const d = Math.floor((Date.now() - ts) / 60000);
-      if (d < 1) return 'just now';
-      if (d < 60) return d + 'm';
-      if (d < 60*24) return Math.floor(d/60) + 'h';
-      return Math.floor(d/60/24) + 'd';
-    }
-
+    const CAT_SVG = {
+      work:  '<rect x="32" y="72" width="192" height="144" rx="8"/><path d="M168 72V48a16 16 0 0 0-16-16h-48a16 16 0 0 0-16 16v24"/>',
+      learn: '<path d="M48 216V48a8 8 0 0 1 8-8h144a8 8 0 0 1 8 8v168"/><path d="M48 216a8 8 0 0 1 8-8h144"/>',
+      life:  '<path d="M128 224V128"/><path d="M128 128c0-30 8-56 24-72s42-24 72-24c0 30-8 56-24 72s-42 24-72 24z"/><path d="M128 128c-30 0-56-8-72-24s-24-42-24-72"/>',
+      other: '<path d="M128 32v64M128 160v64M32 128h64M160 128h64M72 72l40 40M144 144l40 40M184 72l-40 40M112 144l-40 40"/>'
+    };
     function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
     function pickGreeting() {
@@ -1281,325 +831,397 @@
       if (h < 22) return 'Good evening';
       return 'Late night';
     }
-    function dayName(s) {
-      const w = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-      return w[parseDateKey(s).getDay()];
-    }
-    function dayDate(s) {
-      const m = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-      const d = parseDateKey(s);
-      return m[d.getMonth()] + ' ' + d.getDate();
-    }
 
     function computeStreak() {
-      const streak = loadStreak();
-      const today = dateKey(new Date());
-      if (streak.lastDate === today) return streak;
-      // Check today, then check yesterday (allow freeze)
-      const todaysTasks = tasksByDate[today] || [];
-      const completedToday = todaysTasks.some(t => t.done);
-      if (completedToday) {
-        const yesterday = dayOffset(today, -1);
-        const yCompleted = (tasksByDate[yesterday] || []).some(t => t.done);
-        const newCount = streak.lastDate === yesterday ? streak.count + 1 : 1;
-        const newStreak = { lastDate: today, count: newCount };
-        saveStreak(newStreak);
-        return newStreak;
-      }
-      // Check if yesterday is valid (not yet today)
-      return streak;
+      const s = loadJSON(STREAK_KEY, { lastDate: null, count: 0 });
+      const today = todayKey();
+      const todays = todayTasks();
+      const harvestedToday = todays.some(t => t.harvested > 0 || t.completed);
+      if (!harvestedToday) return s.lastDate === dayOffset(today, -1) ? s.count : 0;
+      if (s.lastDate === today) return s.count;
+      const yest = dayOffset(today, -1);
+      const yestHarvested = (loadJSON(TASKS_KEY, []).filter(t => t.date === yest)).some(t => t.harvested > 0 || t.completed);
+      const newCount = s.lastDate === yest ? s.count + 1 : 1;
+      const updated = { lastDate: today, count: newCount };
+      saveJSON(STREAK_KEY, updated);
+      return newCount;
+    }
+    function dayOffset(s, d) { const x = new Date(s); x.setDate(x.getDate() + d); return dateKey(x); }
+
+    /* === Task CRUD === */
+    function addTask(name, expected = 1, category = 'other', note = '') {
+      const order = tasks.length;
+      const t = {
+        id: uid(),
+        name: name.trim(),
+        note: note.trim(),
+        expected, harvested: 0,
+        category,
+        completed: false,
+        order,
+        date: todayKey(),
+        createdAt: Date.now()
+      };
+      tasks.push(t);
+      saveJSON(TASKS_KEY, tasks);
+      playSound('tick');
+      haptic();
+      render();
+      return t;
     }
 
-    function useFreeze() {
-      if (freezeState.count === 0) return;
-      const streak = loadStreak();
-      const yesterday = dayOffset(dateKey(new Date()), -1);
-      const newStreak = { lastDate: yesterday, count: streak.count + 1 };
-      saveStreak(newStreak);
-      freezeState.count--;
-      saveFreeze();
-      playSound('chime');
-      showToast('Freeze used · streak kept');
+    function deleteTask(id) {
+      tasks = tasks.filter(t => t.id !== id);
+      saveJSON(TASKS_KEY, tasks);
       render();
     }
-    document.getElementById('freezeToken').addEventListener('click', useFreeze);
 
-    /* === Add task (with NLP) === */
+    /* === Row handlers (click, drag, quickstart) === */
+    function attachRowHandlers() {
+      const rows = document.querySelectorAll('.task-row');
+      rows.forEach((row, i) => {
+        const id = row.dataset.id;
+
+        // Open editor on row click (not on handle or quickstart)
+        row.addEventListener('click', (e) => {
+          if (e.target.closest('.handle')) return;
+          if (e.target.closest('.quickstart')) {
+            startPomo(id);
+            return;
+          }
+          openEditor(id);
+        });
+
+        // Long press to enter drag mode (desktop: mousedown on handle)
+        const handle = row.querySelector('[data-handle]');
+        let dragStarted = false;
+        let startY = 0, currentY = 0;
+        let placeholder = null;
+        let originalIndex = i;
+        let draggedRow = row;
+
+        const onDown = (e) => {
+          const point = e.touches ? e.touches[0] : e;
+          startY = point.clientY;
+          currentY = startY;
+          dragStarted = false;
+
+          const onMove = (e) => {
+            const p = e.touches ? e.touches[0] : e;
+            currentY = p.clientY;
+            if (!dragStarted && Math.abs(currentY - startY) > 8) {
+              dragStarted = true;
+              draggedRow.classList.add('dragging');
+            }
+            if (dragStarted) {
+              // Move the row visually
+              draggedRow.style.transform = `translateY(${currentY - startY}px)`;
+              draggedRow.style.zIndex = '50';
+              // Find drop target
+              const rowsArr = Array.from(document.querySelectorAll('.task-row'));
+              const dropTarget = findDropTarget(rowsArr, currentY);
+              rowsArr.forEach(r => r.classList.remove('drag-over-top', 'drag-over-bottom'));
+              if (dropTarget && dropTarget !== draggedRow) {
+                const rect = dropTarget.getBoundingClientRect();
+                if (currentY < rect.top + rect.height / 2) dropTarget.classList.add('drag-over-top');
+                else dropTarget.classList.add('drag-over-bottom');
+              }
+            }
+          };
+
+          const onUp = () => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('touchend', onUp);
+            if (dragStarted) {
+              const rowsArr = Array.from(document.querySelectorAll('.task-row'));
+              const dropTarget = findDropTarget(rowsArr, currentY);
+              if (dropTarget && dropTarget !== draggedRow) {
+                const rect = dropTarget.getBoundingClientRect();
+                const insertBefore = currentY < rect.top + rect.height / 2;
+                reorderTasks(draggedRow.dataset.id, dropTarget.dataset.id, insertBefore);
+              }
+              rowsArr.forEach(r => r.classList.remove('drag-over-top', 'drag-over-bottom'));
+              draggedRow.style.transform = '';
+              draggedRow.style.zIndex = '';
+              draggedRow.classList.remove('dragging');
+            }
+            dragStarted = false;
+          };
+
+          if (e.touches) {
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend', onUp);
+          } else {
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+          }
+        };
+        handle.addEventListener('mousedown', onDown);
+        handle.addEventListener('touchstart', onDown, { passive: true });
+      });
+    }
+
+    function findDropTarget(rows, y) {
+      return rows.find(r => {
+        const rect = r.getBoundingClientRect();
+        return y >= rect.top && y <= rect.bottom;
+      });
+    }
+
+    function reorderTasks(draggedId, targetId, insertBefore) {
+      const tList = todayTasks();
+      const draggedIdx = tList.findIndex(t => t.id === draggedId);
+      const targetIdx = tList.findIndex(t => t.id === targetId);
+      if (draggedIdx < 0 || targetIdx < 0) return;
+      const [removed] = tList.splice(draggedIdx, 1);
+      const newIdx = insertBefore ? tList.indexOf(targetId) : tList.indexOf(targetId) + 1;
+      tList.splice(newIdx, 0, removed);
+      tList.forEach((t, i) => t.order = i);
+      saveJSON(TASKS_KEY, tasks);
+      render();
+    }
+
+    /* === Editor === */
+    const sheetOverlay = document.getElementById('sheetOverlay');
+    const settingsOverlay = document.getElementById('settingsOverlay');
+    function openEditor(id) {
+      editingTaskId = id;
+      const t = tasks.find(x => x.id === id);
+      if (!t) return;
+      document.getElementById('editName').value = t.name;
+      document.getElementById('editNote').value = t.note || '';
+      document.getElementById('tomatoVal').textContent = t.expected + ' 🍅';
+      document.querySelectorAll('.cat-row button').forEach(b => b.classList.toggle('active', b.dataset.cat === t.category));
+      sheetOverlay.classList.add('show');
+      setTimeout(() => document.getElementById('editName').focus(), 200);
+    }
+    function closeEditor() { sheetOverlay.classList.remove('show'); editingTaskId = null; }
+    document.getElementById('sheetDelete').addEventListener('click', () => {
+      if (editingTaskId && confirm('Delete this task?')) {
+        deleteTask(editingTaskId);
+        closeEditor();
+        showToast('Deleted');
+      }
+    });
+    document.getElementById('sheetSave').addEventListener('click', () => {
+      if (!editingTaskId) return;
+      const t = tasks.find(x => x.id === editingTaskId);
+      if (!t) return;
+      t.name = document.getElementById('editName').value.trim() || t.name;
+      t.note = document.getElementById('editNote').value.trim();
+      t.expected = parseInt(document.getElementById('tomatoVal').textContent) || t.expected;
+      t.category = document.querySelector('.cat-row button.active')?.dataset.cat || t.category;
+      saveJSON(TASKS_KEY, tasks);
+      render();
+      closeEditor();
+      showToast('Saved');
+    });
+    document.getElementById('tomatoMinus').addEventListener('click', () => {
+      const el = document.getElementById('tomatoVal');
+      const cur = parseInt(el.textContent) || 1;
+      if (cur > 1) el.textContent = (cur - 1) + ' 🍅';
+    });
+    document.getElementById('tomatoPlus').addEventListener('click', () => {
+      const el = document.getElementById('tomatoVal');
+      const cur = parseInt(el.textContent) || 1;
+      el.textContent = (cur + 1) + ' 🍅';
+    });
+    document.querySelectorAll('.cat-row button[data-cat]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.cat-row button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+    sheetOverlay.addEventListener('click', (e) => { if (e.target === sheetOverlay) closeEditor(); });
+
+    /* === Settings === */
+    document.getElementById('settingsBtn').addEventListener('click', () => {
+      document.querySelectorAll('.swatch').forEach(s => {
+        s.style.outline = s.dataset.accent === settings.accent ? '2px solid #0A0A0A' : 'none';
+        s.style.outlineOffset = '2px';
+      });
+      document.querySelectorAll('.dur-btn').forEach(b => {
+        b.style.background = b.dataset.foco == settings.focusDuration/60 ? 'var(--ink)' : 'var(--surface)';
+        b.style.color = b.dataset.foco == settings.focusDuration/60 ? 'white' : 'var(--ink)';
+        b.querySelector('.lbl').style.color = 'inherit';
+      });
+      settingsOverlay.classList.add('show');
+    });
+    settingsOverlay.addEventListener('click', (e) => { if (e.target === settingsOverlay) settingsOverlay.classList.remove('show'); });
+    document.querySelectorAll('.swatch').forEach(s => {
+      s.addEventListener('click', () => {
+        settings.accent = s.dataset.accent;
+        saveJSON(SETTINGS_KEY, settings);
+        applySettings();
+        document.getElementById('settingsBtn').click();
+      });
+    });
+    document.querySelectorAll('.dur-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        settings.focusDuration = parseInt(b.dataset.foco) * 60;
+        pomo.duration = settings.focusDuration;
+        pomo.remaining = settings.focusDuration;
+        saveJSON(SETTINGS_KEY, settings);
+        applySettings();
+        saveJSON(POMO_KEY, pomo);
+        document.getElementById('settingsBtn').click();
+      });
+    });
+
+    /* === History === */
+    document.getElementById('historyBtn').addEventListener('click', () => {
+      const hist = tomatoes.slice(-20).reverse();
+      let msg = hist.length === 0 ? 'No tomatoes yet — start your first one' :
+        `Last 20 tomatoes:\n` + hist.map(t => `${t.completed ? '✓' : '✗'} ${new Date(t.startedAt).toLocaleString()}`).join('\n');
+      alert(msg);
+    });
+
+    /* === Pomodoro (full screen) === */
+    const pomoOverlay = document.getElementById('pomoOverlay');
+    const pomoTime = document.getElementById('pomoTime');
+    const pomoState = document.getElementById('pomoState');
+    const pomoTaskName = document.getElementById('pomoTaskName');
+
+    function startPomo(taskId) {
+      const t = tasks.find(x => x.id === taskId);
+      if (!t) return;
+      pomo.taskId = taskId;
+      pomo.remaining = pomo.duration;
+      pomo.running = false;
+      pomo.startedAt = Date.now();
+      saveJSON(POMO_KEY, pomo);
+      pomoTaskName.textContent = t.name;
+      pomoOverlay.classList.add('show');
+      renderPomo();
+      render();
+    }
+
+    function renderPomo() {
+      pomoTime.textContent = fmtTime(pomo.remaining);
+      pomoState.textContent = pomo.running ? 'Focusing · stay with it' : 'Tap to start';
+      document.getElementById('pomoToggle').textContent = pomo.running ? 'Pause' : 'Start';
+    }
+
+    document.getElementById('pomoToggle').addEventListener('click', () => {
+      pomo.running = !pomo.running;
+      saveJSON(POMO_KEY, pomo);
+      renderPomo();
+      haptic();
+    });
+    document.getElementById('pomoReset').addEventListener('click', () => {
+      pomo.running = false;
+      pomo.remaining = pomo.duration;
+      saveJSON(POMO_KEY, pomo);
+      renderPomo();
+    });
+    document.getElementById('pomoComplete').addEventListener('click', () => completePomo());
+    document.getElementById('pomoClose').addEventListener('click', () => pomoOverlay.classList.remove('show'));
+
+    function completePomo(actuallyCompleted) {
+      if (!pomo.taskId) return;
+      const t = tasks.find(x => x.id === pomo.taskId);
+      if (t && actuallyCompleted !== false) {
+        // Add tomato to log
+        tomatoes.push({
+          id: uid(),
+          taskId: t.id,
+          date: todayKey(),
+          startedAt: pomo.startedAt || Date.now(),
+          endedAt: Date.now(),
+          completed: true
+        });
+        t.harvested = Math.min(t.harvested + 1, t.expected);
+        if (t.harvested >= t.expected) t.completed = true;
+        saveJSON(TASKS_KEY, tasks);
+        saveJSON(TOMATOES_KEY, tomatoes);
+        playSound('chime');
+        haptic();
+        showToast('+' + 1 + ' 🍅');
+      } else if (t) {
+        // Aborted
+        tomatoes.push({
+          id: uid(),
+          taskId: t.id,
+          date: todayKey(),
+          startedAt: pomo.startedAt || Date.now(),
+          endedAt: Date.now(),
+          completed: false
+        });
+        saveJSON(TOMATOES_KEY, tomatoes);
+      }
+      pomo.taskId = null;
+      pomo.running = false;
+      pomo.remaining = pomo.duration;
+      pomo.startedAt = null;
+      saveJSON(POMO_KEY, pomo);
+      pomoOverlay.classList.remove('show');
+      render();
+    }
+
+    setInterval(() => {
+      if (!pomo.running || !pomo.taskId) return;
+      pomo.remaining = Math.max(0, pomo.remaining - 1);
+      if (pomo.remaining % 5 === 0) saveJSON(POMO_KEY, pomo);
+      renderPomo();
+      if (pomo.remaining === 0) completePomo(true);
+    }, 1000);
+    renderPomo();
+
+    /* === Sound + haptics === */
+    function playSound(type) {
+      if (!settings.sound) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        g.gain.setValueAtTime(0, audioCtx.currentTime);
+        o.frequency.value = type === 'tick' ? 1200 : 880;
+        g.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+        o.start(); o.stop(audioCtx.currentTime + 0.15);
+      } catch (e) {}
+    }
+    function haptic() { if (navigator.vibrate) navigator.vibrate(8); }
+
+    /* === Composer === */
     const inputEl = document.getElementById('taskInput');
     const submitBtn = document.getElementById('submitBtn');
     const composer = document.getElementById('composer');
-    const addTimeBtn = document.getElementById('addTimeBtn');
-
     function updateSubmit() { submitBtn.disabled = inputEl.value.trim().length === 0; }
     inputEl.addEventListener('input', updateSubmit);
     inputEl.addEventListener('focus', () => composer.classList.add('focused'));
     inputEl.addEventListener('blur', () => composer.classList.remove('focused'));
     inputEl.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !submitBtn.disabled) {
-        e.preventDefault();
         addTask(inputEl.value);
-        inputEl.value = ''; pendingTaskTime = null; updateSubmit();
-        updateAddTimeBtn();
+        inputEl.value = ''; updateSubmit();
       }
     });
     submitBtn.addEventListener('click', () => {
       if (submitBtn.disabled) return;
       addTask(inputEl.value);
-      inputEl.value = ''; pendingTaskTime = null; updateSubmit();
-      updateAddTimeBtn();
+      inputEl.value = ''; updateSubmit();
       inputEl.focus();
     });
 
-    addTimeBtn.addEventListener('click', () => {
-      // Cycle: none -> 9:00 -> 14:00 -> 18:00 -> none
-      if (!pendingTaskTime) pendingTaskTime = '09:00';
-      else if (pendingTaskTime === '09:00') pendingTaskTime = '14:00';
-      else if (pendingTaskTime === '14:00') pendingTaskTime = '18:00';
-      else pendingTaskTime = null;
-      updateAddTimeBtn();
-    });
-    function updateAddTimeBtn() {
-      addTimeBtn.innerHTML = pendingTaskTime
-        ? `<span style="font-family:'JetBrains Mono',monospace">${formatTime12h(pendingTaskTime)}</span>`
-        : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
-      addTimeBtn.style.color = pendingTaskTime ? 'var(--accent)' : 'var(--ink-soft)';
-    }
-
-    function addTask(rawText) {
-      const t = rawText.trim();
-      if (!t) return;
-      const parsed = parseTaskInput(t);
-      const tasks = tasksByDate[parsed.dueDate] || [];
-      const maxOrder = tasks.reduce((m, x) => Math.max(m, x.order), -1);
-      const item = {
-        id: 't' + Date.now() + Math.random().toString(36).slice(2,7),
-        text: parsed.text,
-        done: false,
-        order: maxOrder + 1,
-        category: autoCategory(parsed.text),
-        dueTime: pendingTaskTime || parsed.dueTime || null,
-        recurring: parsed.recurring,
-        createdAt: Date.now(),
-        doneAt: null
-      };
-      tasksByDate[parsed.dueDate] = [...tasks, item];
-      saveTasks();
-      // If task was added to a different day, switch to that day
-      if (parsed.dueDate !== currentDate) {
-        gotoDate(parsed.dueDate, parsed.dueDate > currentDate ? 1 : -1);
-        showToast('Added to ' + dayName(parsed.dueDate));
-      } else {
-        render();
-        showToast('Added');
-      }
-      playSound('tick');
-      haptic();
-    }
-
-    /* === Row interactions (click + swipe) === */
-    function attachCardHandlers() {
-      document.querySelectorAll('.task-card').forEach(card => {
-        const id = card.dataset.id;
-        let startX=0, startY=0, currentX=0, swiping=false;
-        let didSwipe = false;
-
-        card.addEventListener('click', (e) => {
-          if (didSwipe) { didSwipe = false; return; }
-          if (e.target.closest('.delete-btn')) return;
-          toggleTask(id);
-        });
-
-        // Touch swipe
-        card.addEventListener('touchstart', (e) => {
-          startX = e.touches[0].clientX;
-          startY = e.touches[0].clientY;
-          currentX = 0; swiping = false;
-        }, { passive: true });
-
-        card.addEventListener('touchmove', (e) => {
-          currentX = e.touches[0].clientX - startX;
-          const dy = Math.abs(e.touches[0].clientY - startY);
-          if (Math.abs(currentX) > 8 && dy < 30) {
-            swiping = true;
-            card.classList.add('swiping');
-            if (currentX < 0) card.classList.add('swipe-left');
-            else card.classList.add('swipe-right');
-            card.style.transform = `translateX(${Math.max(-100, Math.min(100, currentX))}px)`;
-          }
-        }, { passive: true });
-
-        card.addEventListener('touchend', (e) => {
-          if (!swiping) return;
-          const ax = currentX;
-          card.classList.remove('swiping', 'swipe-left', 'swipe-right');
-          card.style.transform = '';
-          if (ax < -80) {
-            didSwipe = true;
-            deleteTask(id, card);
-          } else if (ax > 80) {
-            didSwipe = true;
-            toggleTask(id);
-          }
-          swiping = false;
-        });
-
-        // Mouse swipe (desktop)
-        let mStartX = 0, mSwiping = false;
-        card.addEventListener('mousedown', (e) => {
-          if (e.button !== 0) return;
-          mStartX = e.clientX; mSwiping = true;
-        });
-        document.addEventListener('mousemove', () => {}); // dummy
-        const onMouseUp = (e) => {
-          if (!mSwiping) return;
-          mSwiping = false;
-          const dx = e.clientX - mStartX;
-          if (dx < -80) deleteTask(id, card);
-          else if (dx > 80) toggleTask(id);
-        };
-        card.addEventListener('mousemove', (e) => {
-          if (!mSwiping) return;
-          const dx = e.clientX - mStartX;
-          if (Math.abs(dx) > 8) {
-            card.style.transform = `translateX(${Math.max(-100, Math.min(100, dx))}px)`;
-          }
-        });
-        card.addEventListener('mouseleave', () => {
-          if (mSwiping) { card.style.transform = ''; mSwiping = false; }
-        });
-        card.addEventListener('mouseup', onMouseUp);
-      });
-    }
-
-    function toggleTask(id) {
-      const tasks = tasksByDate[currentDate] || [];
-      const idx = tasks.findIndex(t => t.id === id);
-      if (idx < 0) return;
-      const t = tasks[idx];
-      const wasDone = t.done;
-      t.done = !t.done;
-      t.doneAt = t.done ? Date.now() : null;
-      if (t.done) {
-        const maxOrder = tasks.reduce((m, x) => Math.max(m, x.order), -1);
-        t.order = maxOrder + 1;
-      }
-      tasksByDate[currentDate] = tasks;
-      saveTasks();
-      playSound(wasDone ? 'tick' : 'chime');
-      haptic();
-      render();
-      // Handle recurring: spawn next occurrence
-      if (!wasDone && t.recurring) {
-        spawnRecurringInstance(t);
-      }
-    }
-
-    function spawnRecurringInstance(completedTask) {
-      const targetDate = computeNextOccurrence(currentDate, completedTask.recurring);
-      if (!targetDate) return;
-      const tasks = tasksByDate[targetDate] || [];
-      const maxOrder = tasks.reduce((m, x) => Math.max(m, x.order), -1);
-      const clone = {
-        ...completedTask,
-        id: 't' + Date.now() + Math.random().toString(36).slice(2,7),
-        done: false,
-        doneAt: null,
-        order: maxOrder + 1,
-        createdAt: Date.now()
-      };
-      tasksByDate[targetDate] = [...tasks, clone];
-      saveTasks();
-    }
-
-    function computeNextOccurrence(fromDate, recurring) {
-      let d = parseDateKey(fromDate);
-      if (recurring === 'daily') {
-        d.setDate(d.getDate() + 1);
-      } else if (recurring === 'weekly') {
-        d.setDate(d.getDate() + 7);
-      } else if (recurring === 'monthly') {
-        d.setMonth(d.getMonth() + 1);
-      } else if (recurring === 'weekdays') {
-        do { d.setDate(d.getDate() + 1); } while (d.getDay() === 0 || d.getDay() === 6);
-      } else {
-        return null;
-      }
-      return dateKey(d);
-    }
-
-    function deleteTask(id, cardEl) {
-      const finish = () => {
-        const tasks = (tasksByDate[currentDate] || []).filter(t => t.id !== id);
-        tasksByDate[currentDate] = tasks;
-        saveTasks(); render();
-        showToast('Removed');
-        haptic();
-      };
-      if (cardEl) { cardEl.classList.add('removing'); setTimeout(finish, 280); }
-      else finish();
-    }
-
-    /* === Date navigation === */
-    function gotoDate(s, dir) {
-      currentDate = s; saveCurrentDate();
-      checkForDayRollover();
-      const list = document.getElementById('listArea');
-      list.classList.remove('day-in', 'day-out');
-      void list.offsetWidth;
-      list.classList.add(dir > 0 ? 'day-in' : 'day-out');
-      render();
-    }
-    document.getElementById('prevBtn').addEventListener('click', () => gotoDate(dayOffset(currentDate, -1), -1));
-    document.getElementById('nextBtn').addEventListener('click', () => gotoDate(dayOffset(currentDate, 1), 1));
-
-    // Swipe list area to change day
-    let tsx=0, tsy=0, drag=false, dayDragged=false;
-    const listArea = document.getElementById('listArea');
-    listArea.addEventListener('touchstart', (e) => {
-      tsx=e.touches[0].clientX; tsy=e.touches[0].clientY; drag=false; dayDragged=false;
-    }, { passive: true });
-    listArea.addEventListener('touchmove', (e) => {
-      const dx = e.touches[0].clientX - tsx;
-      const dy = Math.abs(e.touches[0].clientY - tsy);
-      if (Math.abs(dx) > 30 && dy < 30) drag = true;
-    }, { passive: true });
-    listArea.addEventListener('touchend', (e) => {
-      if (!drag) return;
-      const dx = e.changedTouches[0].clientX - tsx;
-      if (Math.abs(dx) > 50 && !dayDragged) {
-        if (dx > 0) gotoDate(dayOffset(currentDate, -1), -1);
-        else gotoDate(dayOffset(currentDate, 1), 1);
-        dayDragged = true;
-      }
-      drag = false;
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT') return;
-      if (e.key === 'ArrowLeft') gotoDate(dayOffset(currentDate, -1), -1);
-      else if (e.key === 'ArrowRight') gotoDate(dayOffset(currentDate, 1), 1);
-    });
-
-    /* === Cmd+K Quick Capture === */
+    /* === Cmd+K === */
     const cmdkOverlay = document.getElementById('cmdkOverlay');
     const cmdkInput = document.getElementById('cmdkInput');
     function openCmdK() {
       cmdkOverlay.classList.add('show');
-      cmdkInput.value = '';
-      setTimeout(() => cmdkInput.focus(), 100);
+      cmdkInput.value = ''; setTimeout(() => cmdkInput.focus(), 100);
     }
     function closeCmdK() { cmdkOverlay.classList.remove('show'); }
     cmdkOverlay.addEventListener('click', (e) => { if (e.target === cmdkOverlay) closeCmdK(); });
     cmdkInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && cmdkInput.value.trim()) {
-        addTask(cmdkInput.value);
-        closeCmdK();
-      } else if (e.key === 'Escape') {
-        closeCmdK();
-      }
+      if (e.key === 'Enter' && cmdkInput.value.trim()) { addTask(cmdkInput.value); closeCmdK(); }
+      else if (e.key === 'Escape') closeCmdK();
     });
     document.addEventListener('keydown', (e) => {
-      // Cmd+K (Mac) or Ctrl+K (Win/Linux)
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         if (cmdkOverlay.classList.contains('show')) closeCmdK();
@@ -1607,96 +1229,6 @@
       } else if (e.key === 'Escape' && cmdkOverlay.classList.contains('show')) {
         closeCmdK();
       }
-    });
-
-    /* === Pomodoro === */
-    const pomoOverlay = document.getElementById('pomoOverlay');
-    const pomoTime = document.getElementById('pomoTime');
-    const pomoToggle = document.getElementById('pomoToggle');
-    const pomoReset = document.getElementById('pomoReset');
-    function renderPomo() {
-      const m = Math.floor(pomoState.remaining / 60);
-      const s = pomoState.remaining % 60;
-      pomoTime.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-    }
-    document.getElementById('heroCard').addEventListener('click', () => pomoOverlay.classList.add('show'));
-    pomoOverlay.addEventListener('click', (e) => { if (e.target === pomoOverlay) pomoOverlay.classList.remove('show'); });
-    pomoToggle.addEventListener('click', () => {
-      pomoState.running = !pomoState.running;
-      savePomoState();
-      pomoToggle.textContent = pomoState.running ? 'Pause' : 'Start';
-      haptic();
-    });
-    pomoReset.addEventListener('click', () => {
-      pomoState.running = false;
-      pomoState.remaining = pomoState.duration;
-      savePomoState();
-      renderPomo();
-      pomoToggle.textContent = 'Start';
-    });
-    setInterval(() => {
-      if (!pomoState.running) return;
-      pomoState.remaining = Math.max(0, pomoState.remaining - 1);
-      savePomoState();
-      renderPomo();
-      if (pomoState.remaining === 0) {
-        pomoState.running = false;
-        pomoToggle.textContent = 'Start';
-        pomoState.remaining = pomoState.duration;
-        savePomoState();
-        showToast('Focus complete · take a break');
-        playSound('chime');
-        haptic();
-        pomoOverlay.classList.remove('show');
-      }
-    }, 1000);
-    renderPomo();
-    pomoToggle.textContent = pomoState.running ? 'Pause' : 'Start';
-
-    /* === Focus mode === */
-    function toggleFocusMode() {
-      focusMode = !focusMode;
-      document.getElementById('focusBtn').classList.toggle('active', focusMode);
-      showToast(focusMode ? 'Focus mode on' : 'Focus mode off');
-      render();
-    }
-    document.getElementById('focusBtn').addEventListener('click', toggleFocusMode);
-
-    /* === Settings === */
-    const settingsOverlay = document.getElementById('settingsOverlay');
-    document.getElementById('settingsBtn').addEventListener('click', () => settingsOverlay.classList.add('show'));
-    settingsOverlay.addEventListener('click', (e) => { if (e.target === settingsOverlay) settingsOverlay.classList.remove('show'); });
-
-    document.querySelectorAll('.accent-swatch').forEach(sw => {
-      sw.addEventListener('click', () => {
-        settings.accent = sw.dataset.accent;
-        applySettings();
-        saveSettings();
-        document.querySelectorAll('.accent-swatch').forEach(s => s.classList.toggle('active', s === sw));
-      });
-    });
-    // Set initial active swatch
-    document.querySelectorAll('.accent-swatch').forEach(s => {
-      s.classList.toggle('active', s.dataset.accent === settings.accent);
-    });
-
-    document.getElementById('soundToggle').addEventListener('click', () => {
-      settings.sound = !settings.sound;
-      applySettings(); saveSettings();
-    });
-    document.getElementById('hapticsToggle').addEventListener('click', () => {
-      settings.haptics = !settings.haptics;
-      applySettings(); saveSettings();
-    });
-
-    document.getElementById('exportBtn').addEventListener('click', () => {
-      const blob = new Blob([JSON.stringify(tasksByDate, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `today-backup-${dateKey(new Date())}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('Exported');
     });
 
     /* === Toast === */
@@ -1719,78 +1251,22 @@
     setInterval(updateTime, 30000);
     updateTime();
 
-    /* === Daily reflection === */
-    function checkForDayRollover() {
-      const today = dateKey(new Date());
-      const lastVisit = localStorage.getItem(LAST_VISIT_KEY);
-      localStorage.setItem(LAST_VISIT_KEY, today);
-      if (lastVisit && lastVisit !== today) {
-        // It's a new day — check yesterday's tasks
-        const yTasks = tasksByDate[lastVisit] || [];
-        const undoneYesterday = yTasks.filter(t => !t.done);
-        const doneYesterday = yTasks.filter(t => t.done);
-        if (undoneYesterday.length > 0 && doneYesterday.length > 0) {
-          // Show reflection only if mixed day
-          showReflection(lastVisit, doneYesterday.length, undoneYesterday);
-        } else if (undoneYesterday.length > 0) {
-          // All undone
-          showReflection(lastVisit, 0, undoneYesterday);
-        }
-      }
-    }
-    const reflectOverlay = document.getElementById('reflectOverlay');
-    function showReflection(yesterdayDate, doneCount, undoneList) {
-      const total = doneCount + undoneList.length;
-      document.getElementById('reflectDone').textContent = `${doneCount} of ${total}`;
-      document.getElementById('reflectTitle').textContent = undoneList.length > 0
-        ? `${doneCount} done. ${undoneList.length} left.`
-        : `A fresh page.`;
-      reflectOverlay.classList.add('show');
-    }
-    document.getElementById('reflectCarryOver').addEventListener('click', () => {
-      const today = dateKey(new Date());
-      const yesterday = dayOffset(today, -1);
-      const yTasks = tasksByDate[yesterday] || [];
-      const undone = yTasks.filter(t => !t.done);
-      const tToday = tasksByDate[today] || [];
-      const maxOrder = tToday.reduce((m, x) => Math.max(m, x.order), -1);
-      undone.forEach((t, i) => {
-        tToday.push({ ...t, id: 't' + Date.now() + Math.random().toString(36).slice(2,7) + i, done: false, doneAt: null, order: maxOrder + 1 + i, createdAt: Date.now() });
-      });
-      tasksByDate[today] = tToday;
-      saveTasks();
-      reflectOverlay.classList.remove('show');
-      render();
-      showToast('Carried over');
-    });
-    document.getElementById('reflectLetGo').addEventListener('click', () => {
-      reflectOverlay.classList.remove('show');
-      showToast('Let go');
-    });
-
     /* === Seed sample data === */
-    if (Object.keys(tasksByDate).length === 0) {
-      const today = dateKey(new Date());
-      tasksByDate[today] = [
-        { id: 's1', text: '晨跑 30 分钟', done: true, order: 0, category: 'life', dueTime: '07:00', recurring: 'daily', createdAt: Date.now()-7200000, doneAt: Date.now()-3600000 },
-        { id: 's2', text: '完成项目周报', done: false, order: 1, category: 'work', dueTime: '14:00', createdAt: Date.now()-1800000, doneAt: null },
-        { id: 's3', text: '复习英语单词', done: false, order: 2, category: 'learn', dueTime: '20:00', createdAt: Date.now()-900000, doneAt: null },
-        { id: 's4', text: '回复客户邮件', done: false, order: 3, category: 'work', createdAt: Date.now()-600000, doneAt: null },
-        { id: 's5', text: '买一杯咖啡', done: true, order: 4, category: 'life', createdAt: Date.now()-5400000, doneAt: Date.now()-1800000 },
-        { id: 's6', text: '每周复习', done: true, order: 5, category: 'learn', recurring: 'weekly', createdAt: Date.now()-4800000, doneAt: Date.now()-2400000 }
-      ];
-      saveTasks();
+    if (tasks.length === 0) {
+      const t1 = { id: uid(), name: '晨跑 30 分钟', expected: 1, harvested: 1, category: 'life', completed: true, order: 0, date: todayKey(), createdAt: Date.now()-3600000, note: '' };
+      const t2 = { id: uid(), name: '完成项目周报', expected: 2, harvested: 0, category: 'work', completed: false, order: 1, date: todayKey(), createdAt: Date.now()-1800000, note: '' };
+      const t3 = { id: uid(), name: '复习英语单词', expected: 1, harvested: 0, category: 'learn', completed: false, order: 2, date: todayKey(), createdAt: Date.now()-900000, note: '' };
+      const t4 = { id: uid(), name: '买一杯咖啡', expected: 1, harvested: 1, category: 'life', completed: true, order: 3, date: todayKey(), createdAt: Date.now()-7200000, note: '' };
+      tasks.push(t1, t2, t3, t4);
+      tomatoes.push(
+        { id: uid(), taskId: t1.id, date: todayKey(), startedAt: Date.now()-3600000, endedAt: Date.now()-1800000, completed: true },
+        { id: uid(), taskId: t4.id, date: todayKey(), startedAt: Date.now()-7200000, endedAt: Date.now()-5400000, completed: true }
+      );
+      saveJSON(TASKS_KEY, tasks);
+      saveJSON(TOMATOES_KEY, tomatoes);
     }
 
-    // Initial render
-    checkForDayRollover();
     render();
-
-    // First-time hint: briefly show ⌘K hint
-    if (!localStorage.getItem(SEEN_KEY)) {
-      localStorage.setItem(SEEN_KEY, '1');
-      setTimeout(() => showToast('Press ⌘K to add tasks quickly'), 1500);
-    }
   </script>
 </body>
 </html>
