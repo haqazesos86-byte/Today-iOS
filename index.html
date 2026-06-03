@@ -479,14 +479,6 @@
     <div class="header">
       <div class="top">
         <div class="brand">Today · 今日</div>
-        <div class="actions">
-          <button id="historyBtn" title="History">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          </button>
-          <button id="settingsBtn" title="Settings">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 10v6M4.22 4.22l4.24 4.24m7.08 7.08l4.24 4.24M1 12h6m10 0h6M4.22 19.78l4.24-4.24m7.08-7.08l4.24-4.24"/></svg>
-          </button>
-        </div>
       </div>
       <div class="greeting" id="greeting">Good morning</div>
       <h1 class="headline" id="headline">Make today<br><em>count</em>.</h1>
@@ -989,8 +981,8 @@
     });
     sheetOverlay.addEventListener('click', (e) => { if (e.target === sheetOverlay) closeEditor(); });
 
-    /* === Settings === */
-    document.getElementById('settingsBtn').addEventListener('click', () => {
+    /* === Settings (Cmd+, to open) === */
+    function openSettings() {
       document.querySelectorAll('.swatch').forEach(s => {
         s.style.outline = s.dataset.accent === settings.accent ? '2px solid #0A0A0A' : 'none';
         s.style.outlineOffset = '2px';
@@ -1001,14 +993,14 @@
         b.querySelector('.lbl').style.color = 'inherit';
       });
       settingsOverlay.classList.add('show');
-    });
+    }
     settingsOverlay.addEventListener('click', (e) => { if (e.target === settingsOverlay) settingsOverlay.classList.remove('show'); });
     document.querySelectorAll('.swatch').forEach(s => {
       s.addEventListener('click', () => {
         settings.accent = s.dataset.accent;
         saveJSON(SETTINGS_KEY, settings);
         applySettings();
-        document.getElementById('settingsBtn').click();
+        openSettings();
       });
     });
     document.querySelectorAll('.dur-btn').forEach(b => {
@@ -1019,12 +1011,12 @@
         saveJSON(SETTINGS_KEY, settings);
         applySettings();
         saveJSON(POMO_KEY, pomo);
-        document.getElementById('settingsBtn').click();
+        openSettings();
       });
     });
 
-    /* === History === */
-    document.getElementById('historyBtn').addEventListener('click', () => {
+    /* === History (Cmd+H or in settings) === */
+    function openHistory() {
       const hist = todaySessions();
       const msg = hist.length === 0 ? 'No sessions yet — start your first one' :
         'Today\'s sessions:\n\n' + hist.map(s => {
@@ -1032,7 +1024,7 @@
           return `• ${t ? t.name : '(deleted)'} · ${s.startedAt ? new Date(s.startedAt).toLocaleTimeString() : '?'}`;
         }).join('\n');
       alert(msg);
-    });
+    }
 
     /* === Pomodoro (full-screen) === */
     const pomoOverlay = document.getElementById('pomoOverlay');
