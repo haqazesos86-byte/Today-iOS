@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>番茄 — 今天</title>
+  <title>Today — 今日</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,11 +11,9 @@
 
   <style>
     /* ============================================================
-       番茄 v5 — Early Fanqie architecture
-       Schema: Task (commit to N tomatoes) + Tomato log
-       No due dates as first-class. Drag-to-reorder. Half-sheet.
+       Today v6 — Visual: v3/v4 editorial
+                   Mechanics: Fanqie-inspired (task = tomato count)
        ============================================================ */
-
     :root {
       --accent: #FF5733;
       --bg: #FAFAF7;
@@ -25,17 +23,15 @@
       --ink-fade: rgba(10, 10, 10, 0.35);
       --ink-ghost: rgba(10, 10, 10, 0.08);
       --border: rgba(10, 10, 10, 0.06);
-      --tomato: #E84A3D;
-      --tomato-soft: #FCE4E1;
       --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
       --shadow-md: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px -8px rgba(0,0,0,0.08);
       --shadow-lg: 0 1px 2px rgba(0,0,0,0.04), 0 16px 40px -8px rgba(0,0,0,0.12);
     }
-    body[data-accent="sunset"]   { --accent: #FF5733; --tomato: #E84A3D; --tomato-soft: #FCE4E1; }
-    body[data-accent="forest"]   { --accent: #2B8A3E; --tomato: #2B8A3E; --tomato-soft: #E5F4E7; }
-    body[data-accent="ocean"]    { --accent: #0066FF; --tomato: #0066FF; --tomato-soft: #E0ECFF; }
-    body[data-accent="lavender"] { --accent: #6741D9; --tomato: #6741D9; --tomato-soft: #EFE9FB; }
-    body[data-accent="ink"]      { --accent: #0A0A0A; --tomato: #0A0A0A; --tomato-soft: #EFEFEC; }
+    body[data-accent="sunset"]   { --accent: #FF5733; }
+    body[data-accent="forest"]   { --accent: #2B8A3E; }
+    body[data-accent="ocean"]    { --accent: #0066FF; }
+    body[data-accent="lavender"] { --accent: #6741D9; }
+    body[data-accent="ink"]      { --accent: #0A0A0A; }
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body {
@@ -73,7 +69,6 @@
       }
     }
 
-    /* Status bar */
     .statusbar {
       height: 44px;
       display: flex; align-items: center; justify-content: space-between;
@@ -84,11 +79,8 @@
     .statusbar .battery { width: 24px; height: 11px; border: 1.2px solid var(--ink); border-radius: 3px; position: relative; }
     .statusbar .battery::after { content: ''; position: absolute; top: 1.5px; left: 1.5px; width: 70%; height: 5px; background: var(--ink); border-radius: 1px; }
 
-    /* === Header === */
-    .header {
-      flex-shrink: 0;
-      padding: 4px 24px 20px;
-    }
+    /* === Header (v3 editorial) === */
+    .header { flex-shrink: 0; padding: 4px 24px 20px; }
     .header .top {
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 14px;
@@ -108,7 +100,7 @@
     }
     .header .actions button:hover { background: var(--ink-ghost); }
     .header .actions button:active { background: var(--ink-fade); }
-    .header .actions button.active { background: var(--accent-soft); color: var(--accent); }
+
     .header .greeting {
       font-family: 'Instrument Serif', serif;
       font-size: 13px; font-style: italic;
@@ -127,7 +119,7 @@
     }
     .header .meta .dot { width: 3px; height: 3px; background: var(--ink-fade); border-radius: 50%; }
 
-    /* === Bento === */
+    /* === Bento (v3) === */
     .bento {
       flex-shrink: 0;
       display: grid;
@@ -148,21 +140,21 @@
     .bento .card.clickable:active { transform: scale(0.98); }
     .bento .hero {
       grid-row: span 2;
-      background: linear-gradient(135deg, var(--tomato) 0%, color-mix(in srgb, var(--tomato), #fff 8%) 100%);
+      background: linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent), #fff 12%) 100%);
       color: white;
-      box-shadow: 0 1px 2px var(--tomato-soft), 0 12px 28px -8px var(--tomato-soft);
+      box-shadow: 0 1px 2px var(--ink-ghost), 0 12px 28px -8px var(--ink-ghost);
     }
     .bento .hero .label {
       font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
-      opacity: 0.75; font-weight: 600;
+      opacity: 0.7; font-weight: 600;
     }
     .bento .hero .pct {
       font-family: 'Instrument Serif', serif;
       font-size: 72px; line-height: 1; font-weight: 400;
-      letter-spacing: -0.04em; margin: 8px 0 4px;
+      letter-spacing: -0.04em; margin: 12px 0 4px;
       font-variant-numeric: tabular-nums;
     }
-    .bento .hero .pct::after { content: '🍅'; font-size: 32px; opacity: 0.5; margin-left: 8px; }
+    .bento .hero .pct::after { content: '%'; font-size: 32px; opacity: 0.6; margin-left: 2px; }
     .bento .hero .sub { font-size: 13px; opacity: 0.85; font-weight: 500; }
     .bento .small .label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; margin-bottom: 8px; }
     .bento .small .val { font-family: 'Instrument Serif', serif; font-size: 32px; font-weight: 400; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
@@ -178,7 +170,7 @@
     .section-label .label { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; }
     .section-label .count { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); }
 
-    /* === Task list (drag-reorderable) === */
+    /* === Task rows (v3 + Fanqie drag) === */
     .list-area { flex: 1; overflow-y: auto; padding: 0 20px 100px; -webkit-overflow-scrolling: touch; }
     .list-area::-webkit-scrollbar { display: none; }
 
@@ -187,20 +179,20 @@
       border-radius: 16px;
       padding: 16px 18px;
       margin-bottom: 8px;
-      display: flex; align-items: center; gap: 14px;
+      display: flex; align-items: center; gap: 12px;
       box-shadow: var(--shadow-sm), 0 0 0 1px var(--border);
       transition: opacity 0.3s, transform 0.2s, box-shadow 0.2s;
-      cursor: grab;
+      cursor: pointer;
       position: relative;
     }
-    .task-row:active { cursor: grabbing; }
-    .task-row.dragging { opacity: 0.5; transform: scale(0.98); }
-    .task-row.drag-over-top { box-shadow: 0 -3px 0 var(--tomato); }
-    .task-row.drag-over-bottom { box-shadow: 0 3px 0 var(--tomato); }
+    .task-row.dragging { opacity: 0.5; transform: scale(0.98); z-index: 50; }
+    .task-row.drag-over-top { box-shadow: 0 -3px 0 var(--accent); }
+    .task-row.drag-over-bottom { box-shadow: 0 3px 0 var(--accent); }
     .task-row.done .body .text { text-decoration: line-through; text-decoration-color: rgba(10,10,10,0.4); text-decoration-thickness: 1.5px; color: var(--ink-soft); }
-    .task-row.done { opacity: 0.5; }
+    .task-row.done { opacity: 0.55; }
     .task-row.done .tomatocount { color: var(--ink-fade); }
-    .task-row.removing { opacity: 0; transform: translateX(-100%); pointer-events: none; }
+    .task-row.done .quickstart { background: var(--ink-ghost); color: var(--ink-soft); }
+    .task-row.done .icon { opacity: 0.5; }
 
     .handle {
       width: 16px; height: 24px;
@@ -228,29 +220,31 @@
       word-wrap: break-word;
     }
     .tomatocount {
-      display: flex; align-items: center; gap: 3px;
-      margin-top: 4px;
-      font-size: 12px; color: var(--ink-soft); font-weight: 500;
+      display: inline-flex; align-items: center; gap: 4px;
+      margin-top: 6px;
+      font-size: 11px; color: var(--ink-soft); font-weight: 500;
     }
-    .tomatocount .tomato { font-size: 11px; }
-    .tomatocount .tomato.filled { color: var(--tomato); }
-    .tomatocount .tomato.empty { color: var(--ink-ghost); }
+    .tomatocount .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      border: 1.5px solid var(--ink-fade);
+    }
+    .tomatocount .dot.filled { background: var(--accent); border-color: var(--accent); }
 
     .quickstart {
       width: 36px; height: 36px;
       border-radius: 50%;
-      background: var(--tomato);
+      background: var(--accent);
       color: white;
       display: flex; align-items: center; justify-content: center;
-      font-size: 16px;
+      font-size: 14px;
       flex-shrink: 0;
-      box-shadow: 0 4px 12px rgba(232, 74, 61, 0.35);
+      box-shadow: 0 4px 12px rgba(255, 87, 51, 0.3);
       transition: transform 0.2s;
     }
     .quickstart:active { transform: scale(0.92); }
     .quickstart.running { background: var(--ink); }
 
-    /* === Empty state === */
+    /* === Empty state (v3 editorial) === */
     .empty {
       flex: 1;
       display: flex; flex-direction: column;
@@ -259,11 +253,11 @@
       padding: 40px 20px 60px;
     }
     .empty.hidden { display: none; }
-    .empty .art { width: 140px; height: 140px; margin-bottom: 16px; }
+    .empty .art { width: 160px; height: 160px; margin-bottom: 20px; opacity: 0.85; }
     .empty .title { font-family: 'Instrument Serif', serif; font-size: 24px; font-weight: 400; letter-spacing: -0.01em; margin-bottom: 6px; }
     .empty .sub { font-size: 13px; color: var(--ink-soft); max-width: 240px; line-height: 1.5; }
 
-    /* === Floating add input === */
+    /* === Composer (v3) === */
     .composer {
       position: absolute;
       bottom: 24px;
@@ -289,10 +283,10 @@
     .composer .submit:not(:disabled):active { transform: scale(0.92); }
     .composer .submit svg { width: 16px; height: 16px; }
 
-    /* === Pomodoro (full-screen like early Fanqie) === */
+    /* === Pomodoro overlay (full-screen like Fanqie) === */
     .pomo-overlay {
       position: fixed; inset: 0;
-      background: var(--tomato);
+      background: var(--accent);
       color: white;
       display: flex; flex-direction: column;
       z-index: 200;
@@ -314,14 +308,9 @@
       max-width: 320px;
       margin-bottom: 32px;
     }
-    .pomo-overlay .tomato-art {
-      width: 180px; height: 180px;
-      position: relative;
-      margin-bottom: 32px;
-    }
     .pomo-overlay .time-display {
       font-family: 'Instrument Serif', serif;
-      font-size: 84px; line-height: 1;
+      font-size: 96px; line-height: 1;
       font-weight: 400; letter-spacing: -0.03em;
       font-variant-numeric: tabular-nums;
       margin-bottom: 8px;
@@ -332,9 +321,7 @@
       text-transform: uppercase; opacity: 0.7;
       margin-bottom: 48px;
     }
-    .pomo-overlay .controls {
-      display: flex; gap: 12px;
-    }
+    .pomo-overlay .controls { display: flex; gap: 12px; }
     .pomo-overlay .controls button {
       padding: 14px 28px;
       border-radius: 999px;
@@ -352,6 +339,14 @@
       background: rgba(255,255,255,0.15);
       backdrop-filter: blur(8px);
       display: flex; align-items: center; justify-content: center;
+    }
+    .pomo-overlay .ring-bg {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 320px; height: 320px;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      z-index: -1;
     }
 
     /* === Cmd+K === */
@@ -381,7 +376,7 @@
     .cmdk-bar .search input { flex: 1; border: none; outline: none; font-size: 17px; background: transparent; }
     .cmdk-bar .search kbd { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 2px 6px; background: var(--ink-ghost); border-radius: 4px; color: var(--ink-soft); }
 
-    /* === Editor (half-sheet) === */
+    /* === Editor (half-sheet, v3 + Fanqie) === */
     .sheet-overlay {
       position: fixed; inset: 0;
       background: rgba(10,10,10,0.4);
@@ -416,25 +411,25 @@
       box-shadow: var(--shadow-sm), 0 0 0 1px var(--border);
     }
     .sheet .field textarea { min-height: 80px; font-family: inherit; resize: vertical; }
-    .sheet .tomato-stepper {
+    .sheet .stepper {
       display: flex; align-items: center; gap: 12px;
-      padding: 12px 14px;
+      padding: 8px 14px;
       background: var(--surface);
       border-radius: 12px;
       box-shadow: var(--shadow-sm), 0 0 0 1px var(--border);
     }
-    .sheet .tomato-stepper button {
+    .sheet .stepper button {
       width: 32px; height: 32px;
       border-radius: 50%;
-      background: var(--tomato-soft);
-      color: var(--tomato);
+      background: var(--ink-ghost);
+      color: var(--ink);
       font-size: 18px; font-weight: 600;
       display: flex; align-items: center; justify-content: center;
     }
-    .sheet .tomato-stepper button:active { transform: scale(0.92); }
-    .sheet .tomato-stepper .val {
+    .sheet .stepper button:active { transform: scale(0.92); }
+    .sheet .stepper .val {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 24px; font-weight: 600;
+      font-size: 18px; font-weight: 600;
       flex: 1; text-align: center;
     }
     .sheet .cat-row { display: flex; gap: 8px; }
@@ -483,7 +478,7 @@
 
     <div class="header">
       <div class="top">
-        <div class="brand">Fanqie · 今日</div>
+        <div class="brand">Today · 今日</div>
         <div class="actions">
           <button id="historyBtn" title="History">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -494,7 +489,7 @@
         </div>
       </div>
       <div class="greeting" id="greeting">Good morning</div>
-      <h1 class="headline" id="headline">A few <em>tomatoes</em><br>to harvest.</h1>
+      <h1 class="headline" id="headline">Make today<br><em>count</em>.</h1>
       <div class="meta">
         <span id="weekday">Wednesday</span>
         <span class="dot"></span>
@@ -508,12 +503,12 @@
       <div class="card hero clickable" id="heroCard" title="Start a focus session">
         <div class="label">Today</div>
         <div class="pct" id="pct">0</div>
-        <div class="sub" id="heroSub">一个一个来</div>
+        <div class="sub" id="heroSub">添加一个任务开始</div>
       </div>
       <div class="card small">
-        <div class="label">Harvested</div>
-        <div class="val" id="tomatoCount">0<small>🍅</small></div>
-        <div class="delta neutral" id="tomatoDelta">从第一个开始</div>
+        <div class="label">Focus</div>
+        <div class="val" id="focusCount">0<small>·</small></div>
+        <div class="delta neutral" id="focusDelta">从第一个开始</div>
       </div>
       <div class="card small">
         <div class="label">Streak</div>
@@ -524,17 +519,25 @@
 
     <div class="list-area" id="listArea">
       <div class="empty hidden" id="emptyState">
-        <svg class="art" viewBox="0 0 200 200" fill="none">
-          <circle cx="100" cy="100" r="60" fill="var(--tomato)" opacity="0.15"/>
-          <circle cx="100" cy="100" r="50" fill="var(--tomato)" opacity="0.5"/>
-          <circle cx="100" cy="100" r="42" fill="var(--tomato)"/>
-          <path d="M100 60 Q90 50 100 42 Q110 50 100 60" fill="#2B8A3E"/>
-          <path d="M100 60 Q98 45 100 30 Q103 45 100 60" fill="#3DA94E"/>
+        <svg class="art" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="100" cy="80" r="50" fill="#F0EDE6"/>
+          <rect x="20" y="135" width="160" height="3" fill="currentColor" opacity="0.08"/>
+          <rect x="40" y="138" width="120" height="40" fill="#F0EDE6" rx="2"/>
+          <rect x="65" y="115" width="70" height="40" fill="#FFFFFF" stroke="currentColor" stroke-width="1.5" rx="2"/>
+          <rect x="65" y="115" width="70" height="2" fill="currentColor"/>
+          <rect x="58" y="155" width="84" height="3" fill="currentColor" rx="1.5"/>
+          <path d="M28 130 L34 150 Q34 154 38 154 L42 154 Q46 154 46 150 L52 130 Z" fill="var(--accent)"/>
+          <path d="M50 132 Q58 132 58 140 Q58 148 50 148" stroke="var(--accent)" stroke-width="1.5" fill="none"/>
+          <path d="M36 122 Q34 117 38 114" stroke="currentColor" stroke-width="1" opacity="0.3" stroke-linecap="round"/>
+          <path d="M42 124 Q40 119 44 116" stroke="currentColor" stroke-width="1" opacity="0.3" stroke-linecap="round"/>
+          <rect x="140" y="148" width="14" height="12" fill="#2B8A3E" opacity="0.8" rx="1"/>
+          <path d="M147 148 Q147 138 152 132 Q142 138 142 148" fill="#2B8A3E"/>
+          <path d="M147 148 Q147 138 142 132 Q152 138 152 148" fill="#3DA94E"/>
         </svg>
-        <div class="title">A blank garden.</div>
-        <div class="sub">Add your first task. How many <strong>tomatoes</strong> will it take?</div>
+        <div class="title">Nothing on the list.</div>
+        <div class="sub">A clean page is a 美丽 thing. Press <strong>⌘K</strong> or tap below to begin.</div>
       </div>
-      <div class="section-label" id="tasksLabel">
+      <div class="section-label">
         <span class="label">Tasks</span>
         <span class="count" id="taskCount">0</span>
       </div>
@@ -545,7 +548,7 @@
       <svg class="plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
       </svg>
-      <input type="text" id="taskInput" placeholder="What needs tomatoes?" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="text" id="taskInput" placeholder="What needs your focus?" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <button class="submit" id="submitBtn" disabled aria-label="添加">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
@@ -554,32 +557,14 @@
     </div>
   </div>
 
-  <!-- Pomodoro (full screen, like early Fanqie) -->
+  <!-- Pomodoro (full-screen) -->
   <div class="pomo-overlay" id="pomoOverlay">
     <button class="controls close" id="pomoClose" aria-label="Close">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
+    <div class="ring-bg"></div>
     <div class="pomo-content">
       <div class="task-name" id="pomoTaskName">—</div>
-      <svg class="tomato-art" viewBox="0 0 200 200">
-        <defs>
-          <radialGradient id="tomatoGrad" cx="35%" cy="35%">
-            <stop offset="0%" stop-color="#FF8578"/>
-            <stop offset="100%" stop-color="#E84A3D"/>
-          </radialGradient>
-          <radialGradient id="tomatoGradFading" cx="35%" cy="35%">
-            <stop offset="0%" stop-color="#FF8578" stop-opacity="0.5"/>
-            <stop offset="100%" stop-color="#E84A3D" stop-opacity="0.5"/>
-          </radialGradient>
-        </defs>
-        <circle cx="100" cy="110" r="80" fill="url(#tomatoGrad)"/>
-        <ellipse cx="80" cy="80" rx="20" ry="14" fill="#FFA399" opacity="0.5"/>
-        <path d="M100 50 Q80 30 100 20 Q120 30 100 50" fill="#2B8A3E"/>
-        <path d="M100 50 Q95 30 100 5 Q108 30 100 50" fill="#3DA94E"/>
-        <path d="M100 50 L100 30" stroke="#1F5C2A" stroke-width="2" stroke-linecap="round"/>
-        <!-- progress ring around the tomato -->
-        <circle id="pomoRing" cx="100" cy="110" r="90" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="3"/>
-      </svg>
       <div class="time-display" id="pomoTime">25:00</div>
       <div class="state-label" id="pomoState">Tap to start · 25 min</div>
       <div class="controls">
@@ -603,51 +588,46 @@
 
   <!-- Editor half-sheet -->
   <div class="sheet-overlay" id="sheetOverlay">
-    <div class="sheet" id="sheet">
+    <div class="sheet">
       <div class="grabber"></div>
       <h3 id="sheetTitle">Edit task</h3>
-
       <div class="field">
         <label>Name</label>
         <input type="text" id="editName" placeholder="What needs to be done?">
       </div>
-
       <div class="field">
         <label>Note</label>
         <textarea id="editNote" placeholder="Optional details..."></textarea>
       </div>
-
       <div class="field">
-        <label>Tomatoes (estimated effort)</label>
-        <div class="tomato-stepper">
-          <button id="tomatoMinus">−</button>
-          <div class="val" id="tomatoVal">1 🍅</div>
-          <button id="tomatoPlus">+</button>
+        <label>Focus units · how much effort?</label>
+        <div class="stepper">
+          <button id="unitMinus">−</button>
+          <div class="val" id="unitVal">1</div>
+          <button id="unitPlus">+</button>
         </div>
       </div>
-
       <div class="field">
         <label>Category</label>
         <div class="cat-row">
-          <button data-cat="work" class="cat-work">
+          <button data-cat="work">
             <svg viewBox="0 0 256 256" fill="none" stroke="#FF5733" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"><rect x="32" y="72" width="192" height="144" rx="8"/><path d="M168 72V48a16 16 0 0 0-16-16h-48a16 16 0 0 0-16 16v24"/></svg>
             <span class="lbl">Work</span>
           </button>
-          <button data-cat="learn" class="cat-learn">
+          <button data-cat="learn">
             <svg viewBox="0 0 256 256" fill="none" stroke="#0066FF" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"><path d="M48 216V48a8 8 0 0 1 8-8h144a8 8 0 0 1 8 8v168"/><path d="M48 216a8 8 0 0 1 8-8h144"/></svg>
             <span class="lbl">Learn</span>
           </button>
-          <button data-cat="life" class="cat-life">
-            <svg viewBox="0 0 256 256" fill="none" stroke="#2B8A3E" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"><path d="M128 224V128"/><path d="M128 128c0-30 8-56 24-72s42-24 72-24c0 30-8 56-24 72s-42 24-72 24z"/></svg>
+          <button data-cat="life">
+            <svg viewBox="0 0 256 256" fill="none" stroke="#2B8A3E" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"><path d="M128 224V128"/><path d="M128 128c0-30 8-56 24-72s42-24 72-24c0 30-8 56-24 72s-42 24-72 24z"/><path d="M128 128c-30 0-56-8-72-24s-24-42-24-72"/></svg>
             <span class="lbl">Life</span>
           </button>
-          <button data-cat="other" class="cat-other">
+          <button data-cat="other">
             <svg viewBox="0 0 256 256" fill="none" stroke="#6741D9" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"><path d="M128 32v64M128 160v64M32 128h64M160 128h64M72 72l40 40M144 144l40 40M184 72l-40 40M112 144l-40 40"/></svg>
             <span class="lbl">Other</span>
           </button>
         </div>
       </div>
-
       <div class="actions">
         <button id="sheetDelete" class="danger">Delete</button>
         <button id="sheetSave" class="primary">Save</button>
@@ -687,24 +667,22 @@
 
   <script>
     /* ============================================================
-       Fanqie v5 — Early architecture
-       Tables: tasks (flat) + tomatoes (log) + settings
-       Pomodoro per-task. Drag-to-reorder. Half-sheet editor.
+       Today v6
+       Visual: editorial (v3/v4)
+       Mechanics: Fanqie-inspired (task = N focus units)
        ============================================================ */
-
-    const TASKS_KEY = 'fanqie.tasks.v5';
-    const TOMATOES_KEY = 'fanqie.tomatoes.v5';
-    const POMO_KEY = 'fanqie.pomodoro.v5';
-    const STREAK_KEY = 'fanqie.streak.v5';
-    const SETTINGS_KEY = 'fanqie.settings.v5';
+    const TASKS_KEY = 'today.tasks.v6';
+    const SESSIONS_KEY = 'today.sessions.v6';
+    const POMO_KEY = 'today.pomodoro.v6';
+    const STREAK_KEY = 'today.streak.v6';
+    const SETTINGS_KEY = 'today.settings.v6';
 
     let tasks = loadJSON(TASKS_KEY, []);
-    let tomatoes = loadJSON(TOMATOES_KEY, []);
+    let sessions = loadJSON(SESSIONS_KEY, []);
     let settings = loadJSON(SETTINGS_KEY, { accent: 'sunset', focusDuration: 25 * 60, sound: true });
     let pomo = loadJSON(POMO_KEY, { taskId: null, remaining: 25 * 60, duration: 25 * 60, running: false, startedAt: null });
     let editingTaskId = null;
     let audioCtx = null;
-
     applySettings();
 
     function loadJSON(k, def) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? def : v; } catch { return def; } }
@@ -713,76 +691,67 @@
     function dateKey(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
     function todayKey() { return dateKey(new Date()); }
     function fmtTime(sec) { const m = Math.floor(sec / 60); const s = sec % 60; return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0'); }
-
     function applySettings() {
       document.body.setAttribute('data-accent', settings.accent);
       pomo.duration = settings.focusDuration;
       if (!pomo.taskId) pomo.remaining = settings.focusDuration;
     }
 
-    /* === Today's tomatoes (the log query) === */
-    function todayTomatoes() {
-      const today = todayKey();
-      return tomatoes.filter(t => t.date === today);
+    /* Today's focus sessions (the log) */
+    function todaySessions() {
+      return sessions.filter(s => s.date === todayKey() && s.completed);
+    }
+    function focusedToday(taskId) {
+      return todaySessions().filter(s => s.taskId === taskId).length;
     }
 
-    function harvestedToday(taskId) {
-      return todayTomatoes().filter(t => t.taskId === taskId && t.completed).length;
-    }
-
-    /* === Rendering === */
+    /* === Render === */
     function render() {
-      // Header
-      document.getElementById('greeting').textContent = pickGreeting();
       const d = new Date();
+      document.getElementById('greeting').textContent = pickGreeting();
       document.getElementById('weekday').textContent = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()];
       document.getElementById('dateText').textContent = ['January','February','March','April','May','June','July','August','September','October','November','December'][d.getMonth()] + ' ' + d.getDate();
+      document.getElementById('headline').innerHTML = isToday(todayKey()) ? 'Make today<br><em>count</em>.' : 'Review <em>today</em>.';
 
-      // Bento
       const tList = todayTasks();
       const total = tList.length;
+      const totalUnits = tList.reduce((s, t) => s + t.units, 0);
+      const totalFocused = tList.reduce((s, t) => s + focusedToday(t.id), 0);
       const doneCount = tList.filter(t => t.completed).length;
-      const totalExpected = tList.reduce((s, t) => s + t.expected, 0);
-      const totalHarvested = tList.reduce((s, t) => s + t.harvested, 0);
-      const harvestedPct = totalExpected > 0 ? Math.round(totalHarvested / totalExpected * 100) : 0;
-      const donePct = total > 0 ? Math.round(doneCount / total * 100) : 0;
+      const pct = totalUnits > 0 ? Math.round(totalFocused / totalUnits * 100) : 0;
 
-      document.getElementById('pct').textContent = harvestedPct;
+      document.getElementById('pct').textContent = pct;
       document.getElementById('heroSub').textContent =
         total === 0 ? '添加一个任务开始' :
-        doneCount === total ? '全部完成 · 干得漂亮' :
-        doneCount > 0 ? `${totalHarvested}/${totalExpected} 🍅` : '开始第一个番茄';
-      document.getElementById('tomatoCount').innerHTML = totalHarvested + '<small>🍅</small>';
-      document.getElementById('tomatoDelta').textContent = totalHarvested === 0 ? '从第一个开始' : `今天 ${totalHarvested} 个`;
-      document.getElementById('tomatoDelta').className = 'delta ' + (totalHarvested === 0 ? 'neutral' : '');
+        doneCount === total ? 'All done · 干得漂亮' :
+        totalFocused > 0 ? `${totalFocused} / ${totalUnits} units` : 'Begin when ready';
+      document.getElementById('focusCount').innerHTML = totalFocused + '<small>·</small>';
+      document.getElementById('focusDelta').textContent = totalFocused === 0 ? '从第一个开始' : `${totalFocused} 完成`;
+      document.getElementById('focusDelta').className = 'delta ' + (totalFocused === 0 ? 'neutral' : '');
 
-      // Streak
       const streak = computeStreak();
       document.getElementById('streakCount').innerHTML = streak + '<small>天</small>';
       document.getElementById('streakDelta').textContent = streak > 0 ? '保持节奏' : '开始你的连胜';
       document.getElementById('streakDelta').className = 'delta ' + (streak === 0 ? 'neutral' : '');
 
-      // Tasks list
       const list = document.getElementById('taskList');
       const empty = document.getElementById('emptyState');
       document.getElementById('taskCount').textContent = total;
       if (total === 0) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
       empty.classList.add('hidden');
-
       list.innerHTML = tList.map(t => renderRow(t)).join('');
       attachRowHandlers();
     }
 
-    /* Today's tasks: created today, not deleted */
     function todayTasks() {
-      const today = todayKey();
       return tasks
-        .filter(t => t.date === today)
+        .filter(t => t.date === todayKey())
         .sort((a, b) => a.order - b.order);
     }
 
     function renderRow(t) {
-      const dots = renderTomatoDots(t.expected, t.harvested);
+      const done = focusedToday(t.id);
+      const dots = renderUnitDots(t.units, done);
       const isRunning = pomo.taskId === t.id && pomo.running;
       return `
         <div class="task-row ${t.completed ? 'done' : ''}" data-id="${t.id}">
@@ -794,23 +763,24 @@
           </div>
           <div class="body">
             <div class="text">${escapeHtml(t.name)}</div>
-            <div class="tomatocount">${dots}</div>
+            <div class="tomatocount">${dots}<span>${done}/${t.units} units</span></div>
           </div>
           <button class="quickstart ${isRunning ? 'running' : ''}" data-quickstart aria-label="Start focus">
             ${isRunning
               ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>'
-              : '🍅'}
+              : '▶'}
           </button>
         </div>
       `;
     }
 
-    function renderTomatoDots(expected, harvested) {
+    function renderUnitDots(units, done) {
       let html = '';
-      for (let i = 0; i < expected; i++) {
-        const filled = i < harvested;
-        html += `<span class="tomato ${filled ? 'filled' : 'empty'}">${filled ? '🍅' : '○'}</span>`;
+      const max = Math.min(units, 6);
+      for (let i = 0; i < max; i++) {
+        html += `<span class="dot ${i < done ? 'filled' : ''}"></span>`;
       }
+      if (units > 6) html += `<span class="dot" style="background:transparent">+${units-6}</span>`;
       return html;
     }
 
@@ -831,36 +801,31 @@
       if (h < 22) return 'Good evening';
       return 'Late night';
     }
+    function isToday(s) { return s === todayKey(); }
+    function dayOffset(s, d) { const x = new Date(s); x.setDate(x.getDate() + d); return dateKey(x); }
 
     function computeStreak() {
       const s = loadJSON(STREAK_KEY, { lastDate: null, count: 0 });
       const today = todayKey();
-      const todays = todayTasks();
-      const harvestedToday = todays.some(t => t.harvested > 0 || t.completed);
-      if (!harvestedToday) return s.lastDate === dayOffset(today, -1) ? s.count : 0;
+      const todays = todaySessions();
+      if (todays.length === 0) return s.lastDate === dayOffset(today, -1) ? s.count : 0;
       if (s.lastDate === today) return s.count;
       const yest = dayOffset(today, -1);
-      const yestHarvested = (loadJSON(TASKS_KEY, []).filter(t => t.date === yest)).some(t => t.harvested > 0 || t.completed);
+      const yestSessions = sessions.filter(x => x.date === yest && x.completed);
       const newCount = s.lastDate === yest ? s.count + 1 : 1;
       const updated = { lastDate: today, count: newCount };
       saveJSON(STREAK_KEY, updated);
       return newCount;
     }
-    function dayOffset(s, d) { const x = new Date(s); x.setDate(x.getDate() + d); return dateKey(x); }
 
     /* === Task CRUD === */
-    function addTask(name, expected = 1, category = 'other', note = '') {
+    function addTask(name, units = 1, category = 'other', note = '') {
       const order = tasks.length;
       const t = {
-        id: uid(),
-        name: name.trim(),
-        note: note.trim(),
-        expected, harvested: 0,
-        category,
-        completed: false,
-        order,
-        date: todayKey(),
-        createdAt: Date.now()
+        id: uid(), name: name.trim(), note: note.trim(),
+        units, focusedToday: 0,
+        category, completed: false,
+        order, date: todayKey(), createdAt: Date.now()
       };
       tasks.push(t);
       saveJSON(TASKS_KEY, tasks);
@@ -876,52 +841,40 @@
       render();
     }
 
-    /* === Row handlers (click, drag, quickstart) === */
+    /* === Row drag-to-reorder (handle only) === */
     function attachRowHandlers() {
-      const rows = document.querySelectorAll('.task-row');
-      rows.forEach((row, i) => {
+      document.querySelectorAll('.task-row').forEach(row => {
         const id = row.dataset.id;
 
-        // Open editor on row click (not on handle or quickstart)
+        // Click row to open editor (except on handle / quickstart)
         row.addEventListener('click', (e) => {
           if (e.target.closest('.handle')) return;
-          if (e.target.closest('.quickstart')) {
-            startPomo(id);
-            return;
-          }
+          if (e.target.closest('.quickstart')) { startPomo(id); return; }
           openEditor(id);
         });
 
-        // Long press to enter drag mode (desktop: mousedown on handle)
         const handle = row.querySelector('[data-handle]');
         let dragStarted = false;
         let startY = 0, currentY = 0;
-        let placeholder = null;
-        let originalIndex = i;
-        let draggedRow = row;
 
         const onDown = (e) => {
           const point = e.touches ? e.touches[0] : e;
-          startY = point.clientY;
-          currentY = startY;
-          dragStarted = false;
+          startY = point.clientY; currentY = startY; dragStarted = false;
 
           const onMove = (e) => {
             const p = e.touches ? e.touches[0] : e;
             currentY = p.clientY;
             if (!dragStarted && Math.abs(currentY - startY) > 8) {
               dragStarted = true;
-              draggedRow.classList.add('dragging');
+              row.classList.add('dragging');
             }
             if (dragStarted) {
-              // Move the row visually
-              draggedRow.style.transform = `translateY(${currentY - startY}px)`;
-              draggedRow.style.zIndex = '50';
-              // Find drop target
+              row.style.transform = `translateY(${currentY - startY}px)`;
+              row.style.zIndex = '50';
               const rowsArr = Array.from(document.querySelectorAll('.task-row'));
               const dropTarget = findDropTarget(rowsArr, currentY);
               rowsArr.forEach(r => r.classList.remove('drag-over-top', 'drag-over-bottom'));
-              if (dropTarget && dropTarget !== draggedRow) {
+              if (dropTarget && dropTarget !== row) {
                 const rect = dropTarget.getBoundingClientRect();
                 if (currentY < rect.top + rect.height / 2) dropTarget.classList.add('drag-over-top');
                 else dropTarget.classList.add('drag-over-bottom');
@@ -937,15 +890,15 @@
             if (dragStarted) {
               const rowsArr = Array.from(document.querySelectorAll('.task-row'));
               const dropTarget = findDropTarget(rowsArr, currentY);
-              if (dropTarget && dropTarget !== draggedRow) {
+              if (dropTarget && dropTarget !== row) {
                 const rect = dropTarget.getBoundingClientRect();
                 const insertBefore = currentY < rect.top + rect.height / 2;
-                reorderTasks(draggedRow.dataset.id, dropTarget.dataset.id, insertBefore);
+                reorderTasks(row.dataset.id, dropTarget.dataset.id, insertBefore);
               }
               rowsArr.forEach(r => r.classList.remove('drag-over-top', 'drag-over-bottom'));
-              draggedRow.style.transform = '';
-              draggedRow.style.zIndex = '';
-              draggedRow.classList.remove('dragging');
+              row.style.transform = '';
+              row.style.zIndex = '';
+              row.classList.remove('dragging');
             }
             dragStarted = false;
           };
@@ -983,7 +936,7 @@
       render();
     }
 
-    /* === Editor === */
+    /* === Editor (half-sheet) === */
     const sheetOverlay = document.getElementById('sheetOverlay');
     const settingsOverlay = document.getElementById('settingsOverlay');
     function openEditor(id) {
@@ -992,14 +945,14 @@
       if (!t) return;
       document.getElementById('editName').value = t.name;
       document.getElementById('editNote').value = t.note || '';
-      document.getElementById('tomatoVal').textContent = t.expected + ' 🍅';
+      document.getElementById('unitVal').textContent = t.units;
       document.querySelectorAll('.cat-row button').forEach(b => b.classList.toggle('active', b.dataset.cat === t.category));
       sheetOverlay.classList.add('show');
       setTimeout(() => document.getElementById('editName').focus(), 200);
     }
     function closeEditor() { sheetOverlay.classList.remove('show'); editingTaskId = null; }
     document.getElementById('sheetDelete').addEventListener('click', () => {
-      if (editingTaskId && confirm('Delete this task?')) {
+      if (editingTaskId) {
         deleteTask(editingTaskId);
         closeEditor();
         showToast('Deleted');
@@ -1011,26 +964,26 @@
       if (!t) return;
       t.name = document.getElementById('editName').value.trim() || t.name;
       t.note = document.getElementById('editNote').value.trim();
-      t.expected = parseInt(document.getElementById('tomatoVal').textContent) || t.expected;
+      t.units = parseInt(document.getElementById('unitVal').textContent) || t.units;
       t.category = document.querySelector('.cat-row button.active')?.dataset.cat || t.category;
       saveJSON(TASKS_KEY, tasks);
       render();
       closeEditor();
       showToast('Saved');
     });
-    document.getElementById('tomatoMinus').addEventListener('click', () => {
-      const el = document.getElementById('tomatoVal');
+    document.getElementById('unitMinus').addEventListener('click', () => {
+      const el = document.getElementById('unitVal');
       const cur = parseInt(el.textContent) || 1;
-      if (cur > 1) el.textContent = (cur - 1) + ' 🍅';
+      if (cur > 1) el.textContent = (cur - 1);
     });
-    document.getElementById('tomatoPlus').addEventListener('click', () => {
-      const el = document.getElementById('tomatoVal');
+    document.getElementById('unitPlus').addEventListener('click', () => {
+      const el = document.getElementById('unitVal');
       const cur = parseInt(el.textContent) || 1;
-      el.textContent = (cur + 1) + ' 🍅';
+      el.textContent = (cur + 1);
     });
-    document.querySelectorAll('.cat-row button[data-cat]').forEach(btn => {
+    document.querySelectorAll('.sheet .cat-row button[data-cat]').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.cat-row button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.sheet .cat-row button').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
       });
     });
@@ -1072,13 +1025,16 @@
 
     /* === History === */
     document.getElementById('historyBtn').addEventListener('click', () => {
-      const hist = tomatoes.slice(-20).reverse();
-      let msg = hist.length === 0 ? 'No tomatoes yet — start your first one' :
-        `Last 20 tomatoes:\n` + hist.map(t => `${t.completed ? '✓' : '✗'} ${new Date(t.startedAt).toLocaleString()}`).join('\n');
+      const hist = todaySessions();
+      const msg = hist.length === 0 ? 'No sessions yet — start your first one' :
+        'Today\'s sessions:\n\n' + hist.map(s => {
+          const t = tasks.find(x => x.id === s.taskId);
+          return `• ${t ? t.name : '(deleted)'} · ${s.startedAt ? new Date(s.startedAt).toLocaleTimeString() : '?'}`;
+        }).join('\n');
       alert(msg);
     });
 
-    /* === Pomodoro (full screen) === */
+    /* === Pomodoro (full-screen) === */
     const pomoOverlay = document.getElementById('pomoOverlay');
     const pomoTime = document.getElementById('pomoTime');
     const pomoState = document.getElementById('pomoState');
@@ -1116,40 +1072,39 @@
       saveJSON(POMO_KEY, pomo);
       renderPomo();
     });
-    document.getElementById('pomoComplete').addEventListener('click', () => completePomo());
-    document.getElementById('pomoClose').addEventListener('click', () => pomoOverlay.classList.remove('show'));
+    document.getElementById('pomoComplete').addEventListener('click', () => completePomo(true));
+    document.getElementById('pomoClose').addEventListener('click', () => {
+      if (pomo.taskId) completePomo(false);
+      else pomoOverlay.classList.remove('show');
+    });
 
-    function completePomo(actuallyCompleted) {
+    function completePomo(completed) {
       if (!pomo.taskId) return;
       const t = tasks.find(x => x.id === pomo.taskId);
-      if (t && actuallyCompleted !== false) {
-        // Add tomato to log
-        tomatoes.push({
+      if (t && completed) {
+        sessions.push({
           id: uid(),
           taskId: t.id,
           date: todayKey(),
           startedAt: pomo.startedAt || Date.now(),
           endedAt: Date.now(),
+          duration: pomo.duration - pomo.remaining,
           completed: true
         });
-        t.harvested = Math.min(t.harvested + 1, t.expected);
-        if (t.harvested >= t.expected) t.completed = true;
+        const done = focusedToday(t.id) + 1;
+        if (done >= t.units) t.completed = true;
         saveJSON(TASKS_KEY, tasks);
-        saveJSON(TOMATOES_KEY, tomatoes);
+        saveJSON(SESSIONS_KEY, sessions);
         playSound('chime');
         haptic();
-        showToast('+' + 1 + ' 🍅');
+        showToast('Session logged');
       } else if (t) {
-        // Aborted
-        tomatoes.push({
-          id: uid(),
-          taskId: t.id,
-          date: todayKey(),
-          startedAt: pomo.startedAt || Date.now(),
-          endedAt: Date.now(),
-          completed: false
+        sessions.push({
+          id: uid(), taskId: t.id, date: todayKey(),
+          startedAt: pomo.startedAt || Date.now(), endedAt: Date.now(),
+          duration: pomo.duration - pomo.remaining, completed: false
         });
-        saveJSON(TOMATOES_KEY, tomatoes);
+        saveJSON(SESSIONS_KEY, sessions);
       }
       pomo.taskId = null;
       pomo.running = false;
@@ -1211,10 +1166,7 @@
     /* === Cmd+K === */
     const cmdkOverlay = document.getElementById('cmdkOverlay');
     const cmdkInput = document.getElementById('cmdkInput');
-    function openCmdK() {
-      cmdkOverlay.classList.add('show');
-      cmdkInput.value = ''; setTimeout(() => cmdkInput.focus(), 100);
-    }
+    function openCmdK() { cmdkOverlay.classList.add('show'); cmdkInput.value = ''; setTimeout(() => cmdkInput.focus(), 100); }
     function closeCmdK() { cmdkOverlay.classList.remove('show'); }
     cmdkOverlay.addEventListener('click', (e) => { if (e.target === cmdkOverlay) closeCmdK(); });
     cmdkInput.addEventListener('keydown', (e) => {
@@ -1253,17 +1205,17 @@
 
     /* === Seed sample data === */
     if (tasks.length === 0) {
-      const t1 = { id: uid(), name: '晨跑 30 分钟', expected: 1, harvested: 1, category: 'life', completed: true, order: 0, date: todayKey(), createdAt: Date.now()-3600000, note: '' };
-      const t2 = { id: uid(), name: '完成项目周报', expected: 2, harvested: 0, category: 'work', completed: false, order: 1, date: todayKey(), createdAt: Date.now()-1800000, note: '' };
-      const t3 = { id: uid(), name: '复习英语单词', expected: 1, harvested: 0, category: 'learn', completed: false, order: 2, date: todayKey(), createdAt: Date.now()-900000, note: '' };
-      const t4 = { id: uid(), name: '买一杯咖啡', expected: 1, harvested: 1, category: 'life', completed: true, order: 3, date: todayKey(), createdAt: Date.now()-7200000, note: '' };
+      const t1 = { id: uid(), name: '晨跑 30 分钟', units: 1, category: 'life', completed: true, order: 0, date: todayKey(), createdAt: Date.now()-3600000, note: '' };
+      const t2 = { id: uid(), name: '完成项目周报', units: 2, category: 'work', completed: false, order: 1, date: todayKey(), createdAt: Date.now()-1800000, note: '' };
+      const t3 = { id: uid(), name: '复习英语单词', units: 1, category: 'learn', completed: false, order: 2, date: todayKey(), createdAt: Date.now()-900000, note: '' };
+      const t4 = { id: uid(), name: '买一杯咖啡', units: 1, category: 'life', completed: true, order: 3, date: todayKey(), createdAt: Date.now()-7200000, note: '' };
       tasks.push(t1, t2, t3, t4);
-      tomatoes.push(
-        { id: uid(), taskId: t1.id, date: todayKey(), startedAt: Date.now()-3600000, endedAt: Date.now()-1800000, completed: true },
-        { id: uid(), taskId: t4.id, date: todayKey(), startedAt: Date.now()-7200000, endedAt: Date.now()-5400000, completed: true }
+      sessions.push(
+        { id: uid(), taskId: t1.id, date: todayKey(), startedAt: Date.now()-3600000, endedAt: Date.now()-1800000, duration: 1500, completed: true },
+        { id: uid(), taskId: t4.id, date: todayKey(), startedAt: Date.now()-7200000, endedAt: Date.now()-5400000, duration: 1500, completed: true }
       );
       saveJSON(TASKS_KEY, tasks);
-      saveJSON(TOMATOES_KEY, tomatoes);
+      saveJSON(SESSIONS_KEY, sessions);
     }
 
     render();
