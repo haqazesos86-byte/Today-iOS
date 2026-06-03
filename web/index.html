@@ -1166,10 +1166,18 @@
       else if (e.key === 'Escape') closeCmdK();
     });
     document.addEventListener('keydown', (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod && e.key === 'k') {
         e.preventDefault();
         if (cmdkOverlay.classList.contains('show')) closeCmdK();
         else openCmdK();
+      } else if (mod && e.key === ',') {
+        e.preventDefault();
+        if (settingsOverlay.classList.contains('show')) settingsOverlay.classList.remove('show');
+        else openSettings();
+      } else if (mod && e.key.toLowerCase() === 'h') {
+        e.preventDefault();
+        openHistory();
       } else if (e.key === 'Escape' && cmdkOverlay.classList.contains('show')) {
         closeCmdK();
       }
