@@ -451,6 +451,128 @@
     .sheet .actions button:active { transform: scale(0.97); }
     .sheet .actions button.danger { color: #E84A3D; }
 
+    /* Settings row (toggle rows) */
+    .setting-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px;
+      background: var(--surface);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm), 0 0 0 1px var(--border);
+      margin-bottom: 8px;
+    }
+    .setting-label { flex: 1; min-width: 0; }
+    .setting-label .name { font-size: 14px; font-weight: 500; }
+    .setting-label .desc { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+    .toggle {
+      width: 44px; height: 26px;
+      background: var(--ink-ghost);
+      border-radius: 13px;
+      position: relative;
+      transition: background 0.2s;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+    .toggle::after {
+      content: '';
+      position: absolute; top: 3px; left: 3px;
+      width: 20px; height: 20px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+      transition: transform 0.2s;
+    }
+    .toggle.on { background: var(--accent); }
+    .toggle.on::after { transform: translateX(18px); }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0 16px;
+    }
+
+    .danger-label { color: #E84A3D !important; }
+
+    .action-row { display: flex; gap: 8px; }
+    .action-btn {
+      flex: 1;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: var(--shadow-sm), 0 0 0 1px var(--border);
+      font-size: 13px; font-weight: 500;
+      color: var(--ink);
+      transition: all 0.15s;
+    }
+    .action-btn:active { transform: scale(0.97); }
+    .action-btn svg { color: var(--ink-soft); }
+
+    .destructive-btn {
+      width: 100%;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 14px;
+      border-radius: 12px;
+      background: rgba(232, 74, 61, 0.08);
+      color: #E84A3D;
+      font-size: 14px; font-weight: 500;
+      transition: all 0.15s;
+    }
+    .destructive-btn:hover { background: rgba(232, 74, 61, 0.15); }
+    .destructive-btn:active { transform: scale(0.98); }
+
+    .footer-version {
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--ink-fade);
+      padding: 16px 0 4px;
+    }
+
+    /* Confirm dialog (mini) */
+    .confirm-overlay {
+      position: fixed; inset: 0;
+      background: rgba(10,10,10,0.5);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 300;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+      padding: 24px;
+    }
+    .confirm-overlay.show { opacity: 1; pointer-events: auto; }
+    .confirm-card {
+      max-width: 320px;
+      background: var(--bg);
+      border-radius: 20px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 30px 60px -20px rgba(0,0,0,0.3);
+      transform: scale(0.95);
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .confirm-overlay.show .confirm-card { transform: scale(1); }
+    .confirm-card .confirm-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+    .confirm-card .confirm-sub {
+      font-size: 13px; color: var(--ink-soft);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .confirm-card .confirm-actions { display: flex; gap: 8px; }
+    .confirm-card .confirm-actions button {
+      flex: 1; padding: 12px;
+      border-radius: 10px;
+      font-size: 14px; font-weight: 600;
+      background: var(--ink-ghost);
+      color: var(--ink);
+    }
+    .confirm-card .confirm-actions button.destructive { background: #E84A3D; color: white; }
+    .confirm-card .confirm-actions button:active { transform: scale(0.97); }
+
     /* === Toast === */
     .toast {
       position: fixed; bottom: 100px; left: 50%;
@@ -632,9 +754,10 @@
     <div class="sheet" id="settingsSheet">
       <div class="grabber"></div>
       <h3>Settings</h3>
+
       <div class="field">
         <label>Accent</label>
-        <div class="cat-row">
+        <div class="cat-row" id="accentRow">
           <div style="height:40px;border-radius:10px;background:#FF5733;cursor:pointer" data-accent="sunset" class="swatch"></div>
           <div style="height:40px;border-radius:10px;background:#2B8A3E;cursor:pointer" data-accent="forest" class="swatch"></div>
           <div style="height:40px;border-radius:10px;background:#0066FF;cursor:pointer" data-accent="ocean" class="swatch"></div>
@@ -642,16 +765,102 @@
           <div style="height:40px;border-radius:10px;background:#0A0A0A;cursor:pointer" data-accent="ink" class="swatch"></div>
         </div>
       </div>
+
       <div class="field">
         <label>Focus duration</label>
-        <div class="cat-row">
-          <button data-foco="20" class="dur-btn"><span class="lbl">20m</span></button>
+        <div class="cat-row" id="durationRow">
+          <button data-foco="15" class="dur-btn"><span class="lbl">15m</span></button>
           <button data-foco="25" class="dur-btn"><span class="lbl">25m</span></button>
-          <button data-foco="30" class="dur-btn"><span class="lbl">30m</span></button>
           <button data-foco="45" class="dur-btn"><span class="lbl">45m</span></button>
           <button data-foco="60" class="dur-btn"><span class="lbl">60m</span></button>
+          <button data-foco="90" class="dur-btn"><span class="lbl">90m</span></button>
         </div>
       </div>
+
+      <div class="field">
+        <label>Default units per new task</label>
+        <div class="cat-row" id="unitsRow">
+          <button data-units="1" class="units-btn"><span class="lbl">1</span></button>
+          <button data-units="2" class="units-btn"><span class="lbl">2</span></button>
+          <button data-units="3" class="units-btn"><span class="lbl">3</span></button>
+          <button data-units="5" class="units-btn"><span class="lbl">5</span></button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">
+          <div class="name">Sound</div>
+          <div class="desc">Play subtle chimes on completion</div>
+        </div>
+        <div class="toggle on" id="soundToggle"></div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">
+          <div class="name">Haptics</div>
+          <div class="desc">Vibration on mobile devices</div>
+        </div>
+        <div class="toggle on" id="hapticsToggle"></div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">
+          <div class="name">Auto-start break</div>
+          <div class="desc">Begin short break when focus ends</div>
+        </div>
+        <div class="toggle" id="autoBreakToggle"></div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">
+          <div class="name">Reflection prompt</div>
+          <div class="desc">Ask about unfinished tasks at midnight</div>
+        </div>
+        <div class="toggle on" id="reflectToggle"></div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">
+          <div class="name">Show completed</div>
+          <div class="desc">Display finished tasks in the list</div>
+        </div>
+        <div class="toggle on" id="showDoneToggle"></div>
+      </div>
+
+      <div class="field">
+        <label>Week starts on</label>
+        <div class="cat-row" id="weekStartRow">
+          <button data-weekstart="0" class="ws-btn"><span class="lbl">Sun</span></button>
+          <button data-weekstart="1" class="ws-btn"><span class="lbl">Mon</span></button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field">
+        <label>Data</label>
+        <div class="action-row">
+          <button class="action-btn" id="exportBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Export JSON</span>
+          </button>
+          <button class="action-btn" id="importBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Import JSON</span>
+          </button>
+        </div>
+        <input type="file" id="importFile" accept="application/json" style="display:none">
+      </div>
+
+      <div class="field">
+        <label class="danger-label">Danger zone</label>
+        <button class="destructive-btn" id="resetBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>Erase all data</span>
+        </button>
+      </div>
+
+      <div class="footer-version">Today v6.1</div>
     </div>
   </div>
 
@@ -671,7 +880,17 @@
 
     let tasks = loadJSON(TASKS_KEY, []);
     let sessions = loadJSON(SESSIONS_KEY, []);
-    let settings = loadJSON(SETTINGS_KEY, { accent: 'sunset', focusDuration: 25 * 60, sound: true });
+    let settings = loadJSON(SETTINGS_KEY, {
+      accent: 'sunset',
+      focusDuration: 25 * 60,
+      defaultUnits: 1,
+      sound: true,
+      haptics: true,
+      autoBreak: false,
+      reflection: true,
+      showDone: true,
+      weekStart: 1
+    });
     let pomo = loadJSON(POMO_KEY, { taskId: null, remaining: 25 * 60, duration: 25 * 60, running: false, startedAt: null });
     let editingTaskId = null;
     let audioCtx = null;
@@ -811,7 +1030,10 @@
     }
 
     /* === Task CRUD === */
-    function addTask(name, units = 1, category = 'other', note = '') {
+    function addTask(name, units, category, note) {
+      units = units || settings.defaultUnits || 1;
+      category = category || 'other';
+      note = note || '';
       const order = tasks.length;
       const t = {
         id: uid(), name: name.trim(), note: note.trim(),
@@ -983,19 +1205,46 @@
 
     /* === Settings (Cmd+, to open) === */
     function openSettings() {
-      document.querySelectorAll('.swatch').forEach(s => {
+      // Accent
+      document.querySelectorAll('#accentRow .swatch').forEach(s => {
         s.style.outline = s.dataset.accent === settings.accent ? '2px solid #0A0A0A' : 'none';
         s.style.outlineOffset = '2px';
       });
-      document.querySelectorAll('.dur-btn').forEach(b => {
-        b.style.background = b.dataset.foco == settings.focusDuration/60 ? 'var(--ink)' : 'var(--surface)';
-        b.style.color = b.dataset.foco == settings.focusDuration/60 ? 'white' : 'var(--ink)';
+      // Duration
+      document.querySelectorAll('#durationRow .dur-btn').forEach(b => {
+        const m = b.dataset.foco * 60;
+        const isActive = m === settings.focusDuration;
+        b.style.background = isActive ? 'var(--ink)' : 'var(--surface)';
+        b.style.color = isActive ? 'white' : 'var(--ink)';
         b.querySelector('.lbl').style.color = 'inherit';
       });
+      // Units
+      document.querySelectorAll('#unitsRow .units-btn').forEach(b => {
+        const isActive = +b.dataset.units === settings.defaultUnits;
+        b.style.background = isActive ? 'var(--ink)' : 'var(--surface)';
+        b.style.color = isActive ? 'white' : 'var(--ink)';
+        b.querySelector('.lbl').style.color = 'inherit';
+      });
+      // Week start
+      document.querySelectorAll('#weekStartRow .ws-btn').forEach(b => {
+        const isActive = +b.dataset.weekstart === settings.weekStart;
+        b.style.background = isActive ? 'var(--ink)' : 'var(--surface)';
+        b.style.color = isActive ? 'white' : 'var(--ink)';
+        b.querySelector('.lbl').style.color = 'inherit';
+      });
+      // Toggles
+      document.getElementById('soundToggle').classList.toggle('on', settings.sound);
+      document.getElementById('hapticsToggle').classList.toggle('on', settings.haptics);
+      document.getElementById('autoBreakToggle').classList.toggle('on', settings.autoBreak);
+      document.getElementById('reflectToggle').classList.toggle('on', settings.reflection);
+      document.getElementById('showDoneToggle').classList.toggle('on', settings.showDone);
       settingsOverlay.classList.add('show');
     }
+
     settingsOverlay.addEventListener('click', (e) => { if (e.target === settingsOverlay) settingsOverlay.classList.remove('show'); });
-    document.querySelectorAll('.swatch').forEach(s => {
+
+    // Accent
+    document.querySelectorAll('#accentRow .swatch').forEach(s => {
       s.addEventListener('click', () => {
         settings.accent = s.dataset.accent;
         saveJSON(SETTINGS_KEY, settings);
@@ -1003,7 +1252,8 @@
         openSettings();
       });
     });
-    document.querySelectorAll('.dur-btn').forEach(b => {
+    // Duration
+    document.querySelectorAll('#durationRow .dur-btn').forEach(b => {
       b.addEventListener('click', () => {
         settings.focusDuration = parseInt(b.dataset.foco) * 60;
         pomo.duration = settings.focusDuration;
@@ -1013,6 +1263,108 @@
         saveJSON(POMO_KEY, pomo);
         openSettings();
       });
+    });
+    // Default units
+    document.querySelectorAll('#unitsRow .units-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        settings.defaultUnits = parseInt(b.dataset.units);
+        saveJSON(SETTINGS_KEY, settings);
+        openSettings();
+      });
+    });
+    // Week start
+    document.querySelectorAll('#weekStartRow .ws-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        settings.weekStart = parseInt(b.dataset.weekstart);
+        saveJSON(SETTINGS_KEY, settings);
+        openSettings();
+      });
+    });
+
+    // Toggles
+    function bindToggle(id, key) {
+      document.getElementById(id).addEventListener('click', () => {
+        settings[key] = !settings[key];
+        saveJSON(SETTINGS_KEY, settings);
+        openSettings();
+      });
+    }
+    bindToggle('soundToggle', 'sound');
+    bindToggle('hapticsToggle', 'haptics');
+    bindToggle('autoBreakToggle', 'autoBreak');
+    bindToggle('reflectToggle', 'reflection');
+    bindToggle('showDoneToggle', 'showDone');
+
+    // Export
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const dump = {
+        version: 'v6.1',
+        exportedAt: new Date().toISOString(),
+        tasks, sessions, settings
+      };
+      const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `today-backup-${todayKey()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Exported');
+    });
+
+    // Import
+    document.getElementById('importBtn').addEventListener('click', () => {
+      document.getElementById('importFile').click();
+    });
+    document.getElementById('importFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          if (data.tasks) tasks = data.tasks;
+          if (data.sessions) sessions = data.sessions;
+          if (data.settings) settings = { ...settings, ...data.settings };
+          saveJSON(TASKS_KEY, tasks);
+          saveJSON(SESSIONS_KEY, sessions);
+          saveJSON(SETTINGS_KEY, settings);
+          applySettings();
+          render();
+          showToast('Imported');
+          settingsOverlay.classList.remove('show');
+        } catch (err) {
+          alert('Import failed: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // Reset
+    const confirmOverlay = document.createElement('div');
+    confirmOverlay.className = 'confirm-overlay';
+    confirmOverlay.innerHTML = `
+      <div class="confirm-card">
+        <div class="confirm-title">Erase all data?</div>
+        <div class="confirm-sub">This will permanently delete all tasks, sessions, and settings. This cannot be undone.</div>
+        <div class="confirm-actions">
+          <button class="cancel">Cancel</button>
+          <button class="destructive">Erase</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(confirmOverlay);
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      confirmOverlay.classList.add('show');
+    });
+    confirmOverlay.querySelector('.cancel').addEventListener('click', () => {
+      confirmOverlay.classList.remove('show');
+    });
+    confirmOverlay.addEventListener('click', (e) => {
+      if (e.target === confirmOverlay) confirmOverlay.classList.remove('show');
+    });
+    confirmOverlay.querySelector('.destructive').addEventListener('click', () => {
+      localStorage.clear();
+      location.reload();
     });
 
     /* === History (Cmd+H or in settings) === */
