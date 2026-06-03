@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>今天 — 极简每日待办</title>
+  <style>
+    /* ===== Reset & Base ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    button { font-family: inherit; background: none; border: none; cursor: pointer; color: inherit; }
+    input { font-family: inherit; }
+
+    /* ===== Phone frame (so it looks like a phone) ===== */
+    .phone {
+      position: relative;
+      max-width: 480px;
+      width: 100%;
+      height: 100%;
+      max-height: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.05);
+    }
+    @media (min-width: 600px) {
+      body { display: flex; align-items: center; justify-content: center; padding: 20px; }
+      .phone { border-radius: 0; box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05); }
+    }
+
+    /* ===== Status bar (fake) ===== */
+    .statusbar {
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 14px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .statusbar .right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .statusbar .battery {
+      width: 24px;
+      height: 12px;
+      border: 1px solid #1d1d1f;
+      border-radius: 3px;
+      position: relative;
+    }
+    .statusbar .battery::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 70%;
+      height: 6px;
+      background: #1d1d1f;
+    }
+
+    /* ===== Date header ===== */
+    .date-header {
+      padding: 8px 24px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+    .date-header .title {
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+    .date-header .subtitle {
+      font-size: 14px;
+      color: #86868b;
+      margin-top: 4px;
+    }
+    .date-header .nav {
+      display: flex;
+      gap: 16px;
+      padding-bottom: 6px;
+    }
+    .date-header .nav button {
+      font-size: 16px;
+      color: #86868b;
+      padding: 4px 8px;
+      transition: opacity 0.2s;
+    }
+    .date-header .nav button:active { opacity: 0.4; }
+
+    /* ===== List area ===== */
+    .list-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 24px 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .list-area::-webkit-scrollbar { display: none; }
+
+    .task-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 0;
+      cursor: pointer;
+      transition: opacity 0.3s, transform 0.3s;
+      user-select: none;
+    }
+    .task-row.removing {
+      opacity: 0;
+      transform: translateX(-100%);
+      pointer-events: none;
+    }
+    .task-row.swiping {
+      transform: translateX(var(--swipe-x, 0px));
+      transition: none;
+    }
+
+    .circle {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1.5px solid #c7c7cc;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.3s, background-color 0.3s;
+    }
+    .task-row.done .circle {
+      background: #30d158;
+      border-color: #30d158;
+    }
+    .check {
+      width: 14px;
+      height: 14px;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .task-row.done .check {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .check path {
+      stroke: white;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .text {
+      font-size: 16px;
+      color: #1d1d1f;
+      line-height: 1.3;
+      flex: 1;
+      word-wrap: break-word;
+      transition: color 0.3s, text-decoration-color 0.3s;
+    }
+    .task-row.done .text {
+      color: #aeaeb2;
+      text-decoration: line-through;
+      text-decoration-color: #aeaeb2;
+    }
+
+    .delete-btn {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ff3b30;
+      font-size: 18px;
+      opacity: 0;
+      transition: opacity 0.2s;
+      flex-shrink: 0;
+    }
+    .task-row:hover .delete-btn { opacity: 1; }
+    @media (hover: none) {
+      /* Touch device: show delete on long press or via swipe */
+      .task-row.swiping .delete-btn { opacity: 1; }
+    }
+
+    .divider {
+      height: 0.5px;
+      background: rgba(0, 0, 0, 0.12);
+      margin: 8px 0;
+    }
+
+    /* ===== Empty state ===== */
+    .empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: #86868b;
+      padding: 40px 20px;
+      transition: opacity 0.3s;
+    }
+    .empty .emoji {
+      font-size: 48px;
+      line-height: 1;
+    }
+    .empty .text-main {
+      font-size: 16px;
+    }
+    .empty.hidden { display: none; }
+
+    /* ===== Input bar ===== */
+    .input-bar {
+      flex-shrink: 0;
+      padding: 12px 24px 28px;
+      background: #ffffff;
+      border-top: 0.5px solid rgba(0, 0, 0, 0.05);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: max(28px, env(safe-area-inset-bottom));
+    }
+    .input-bar .plus {
+      font-size: 22px;
+      color: #aeaeb2;
+      transition: color 0.2s;
+      flex-shrink: 0;
+    }
+    .input-bar.focused .plus { color: #30d158; }
+    .input-bar input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      color: #1d1d1f;
+      background: transparent;
+    }
+    .input-bar input::placeholder { color: #aeaeb2; }
+
+    /* ===== Toast ===== */
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(0,0,0,0.85);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+      z-index: 100;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ===== Day transition animation ===== */
+    .list-area.day-transition {
+      animation: daySlide 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes daySlide {
+      0% { opacity: 0; transform: translateX(20px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+    .list-area.day-transition-back {
+      animation: daySlideBack 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes daySlideBack {
+      0% { opacity: 0; transform: translateX(-20px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ===== Hint ===== */
+    .hint {
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.85);
+      color: white;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 50;
+      white-space: nowrap;
+    }
+    .hint.show { opacity: 1; }
+
+    /* ===== Action sheet (for delete on touch) ===== */
+    .sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 200;
+    }
+    .sheet-backdrop.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .sheet {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%) translateY(100%);
+      width: 100%;
+      max-width: 480px;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 8px 8px 32px;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 201;
+    }
+    .sheet.show {
+      transform: translateX(-50%) translateY(0);
+    }
+    .sheet button {
+      width: 100%;
+      padding: 16px;
+      font-size: 17px;
+      background: white;
+      color: #ff3b30;
+      border-radius: 12px;
+      margin-top: 8px;
+    }
+    .sheet button.cancel {
+      color: #1d1d1f;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <div class="statusbar">
+      <span class="time" id="time">9:41</span>
+      <div class="right">
+        <span>●●●●</span>
+        <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 2 C 5 2 3 4 1 6 L 0 5 C 2 3 5 0 8 0 C 11 0 14 3 16 5 L 15 6 C 13 4 11 2 8 2 Z M 8 5 C 6 5 5 6 4 7 L 3 6 C 4 5 6 3 8 3 C 10 3 12 5 13 6 L 12 7 C 11 6 10 5 8 5 Z" fill="#1d1d1f"/><circle cx="8" cy="9" r="1.5" fill="#1d1d1f"/></svg>
+        <div class="battery"></div>
+      </div>
+    </div>
+
+    <div class="date-header">
+      <div>
+        <div class="title" id="dateTitle">今 天</div>
+        <div class="subtitle" id="dateSubtitle">星期二</div>
+      </div>
+      <div class="nav">
+        <button id="prevBtn" title="前一天">‹</button>
+        <button id="nextBtn" title="后一天">›</button>
+      </div>
+    </div>
+
+    <div class="list-area" id="listArea">
+      <div class="empty" id="emptyState">
+        <div class="emoji">☕️</div>
+        <div class="text-main">今天可以偷个懒了</div>
+      </div>
+      <div id="taskList"></div>
+    </div>
+
+    <div class="input-bar" id="inputBar">
+      <span class="plus">+</span>
+      <input
+        type="text"
+        id="taskInput"
+        placeholder="写下来"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+      />
+    </div>
+
+    <div class="hint" id="hint">← 左右滑动切换日期</div>
+  </div>
+
+  <div class="toast" id="toast">已添加</div>
+
+  <div class="sheet-backdrop" id="sheetBackdrop"></div>
+  <div class="sheet" id="sheet">
+    <button class="cancel" id="sheetCancel">取消</button>
+    <button id="sheetDelete">删除</button>
+  </div>
+
+  <script>
+    // ============================================================
+    // Today App — Web Edition
+    // Mirrors the iOS SwiftUI version: zero tabs, zero rounded
+    // corners, date header, empty state, completed divider,
+    // drag-to-switch-day, localStorage persistence.
+    // ============================================================
+
+    // ----- Data -----
+    const STORAGE_KEY = 'today.tasks.v1';
+    const DATE_KEY = 'today.currentDate.v1';
+    const SEEN_KEY = 'today.seenHint.v1';
+
+    // Map: "YYYY-MM-DD" -> [ { id, text, done, createdAt, doneAt } ]
+    let tasksByDate = loadTasks();
+    let currentDate = loadCurrentDate();
+
+    // ----- Storage -----
+    function loadTasks() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return {};
+        return JSON.parse(raw);
+      } catch { return {}; }
+    }
+    function saveTasks() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasksByDate));
+    }
+    function loadCurrentDate() {
+      const raw = localStorage.getItem(DATE_KEY);
+      if (raw) return raw;
+      return dateKey(new Date());
+    }
+    function saveCurrentDate() {
+      localStorage.setItem(DATE_KEY, currentDate);
+    }
+
+    // ----- Date utils -----
+    function dateKey(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+    function parseDateKey(s) {
+      const [y, m, d] = s.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+    function isToday(s) {
+      return s === dateKey(new Date());
+    }
+    function dayOffset(s, delta) {
+      const d = parseDateKey(s);
+      d.setDate(d.getDate() + delta);
+      return dateKey(d);
+    }
+    function weekdayCN(s) {
+      const d = parseDateKey(s);
+      const w = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][d.getDay()];
+      return w;
+    }
+    function monthDayCN(s) {
+      const d = parseDateKey(s);
+      return `${d.getMonth() + 1}月${d.getDate()}日`;
+    }
+
+    // ----- Render -----
+    function render() {
+      // Date header
+      const titleEl = document.getElementById('dateTitle');
+      const subEl = document.getElementById('dateSubtitle');
+      if (isToday(currentDate)) {
+        titleEl.textContent = '今 天';
+        subEl.textContent = weekdayCN(currentDate);
+      } else {
+        titleEl.textContent = monthDayCN(currentDate);
+        subEl.textContent = weekdayCN(currentDate);
+      }
+
+      // List
+      const tasks = (tasksByDate[currentDate] || []).slice();
+      tasks.sort((a, b) => a.order - b.order);
+      const list = document.getElementById('taskList');
+      const empty = document.getElementById('emptyState');
+
+      if (tasks.length === 0) {
+        list.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+
+      const undone = tasks.filter(t => !t.done);
+      const done = tasks.filter(t => t.done).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
+
+      let html = '';
+      for (const t of undone) {
+        html += renderRow(t);
+      }
+      if (done.length > 0) {
+        html += '<div class="divider"></div>';
+        for (const t of done) {
+          html += renderRow(t);
+        }
+      }
+      list.innerHTML = html;
+      attachRowHandlers();
+    }
+
+    function renderRow(t) {
+      const checked = t.done ? 'done' : '';
+      return `
+        <div class="task-row ${checked}" data-id="${t.id}">
+          <div class="circle">
+            <svg class="check" viewBox="0 0 14 14">
+              <path d="M2 7 L6 11 L12 3"/>
+            </svg>
+          </div>
+          <div class="text">${escapeHtml(t.text)}</div>
+          <button class="delete-btn" data-action="delete">✕</button>
+        </div>
+      `;
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    // ----- Add task -----
+    document.getElementById('taskInput').addEventListener('focus', () => {
+      document.getElementById('inputBar').classList.add('focused');
+    });
+    document.getElementById('taskInput').addEventListener('blur', () => {
+      document.getElementById('inputBar').classList.remove('focused');
+    });
+    document.getElementById('taskInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const text = e.target.value.trim();
+        if (text) {
+          addTask(text);
+          e.target.value = '';
+        }
+      }
+    });
+
+    function addTask(text) {
+      const tasks = tasksByDate[currentDate] || [];
+      const maxOrder = tasks.reduce((m, t) => Math.max(m, t.order), -1);
+      const t = {
+        id: 't' + Date.now() + Math.random().toString(36).slice(2, 7),
+        text,
+        done: false,
+        order: maxOrder + 1,
+        createdAt: Date.now(),
+        doneAt: null
+      };
+      tasksByDate[currentDate] = [...tasks, t];
+      saveTasks();
+      render();
+      showToast('已添加');
+    }
+
+    // ----- Row interactions -----
+    function attachRowHandlers() {
+      const rows = document.querySelectorAll('.task-row');
+      rows.forEach(row => {
+        const id = row.dataset.id;
+        const task = findTask(id);
+        if (!task) return;
+
+        // Click circle / row to toggle
+        row.addEventListener('click', (e) => {
+          if (e.target.closest('.delete-btn')) return;
+          toggleTask(id);
+        });
+
+        // Delete button (mouse)
+        row.querySelector('.delete-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          openDeleteSheet(id);
+        });
+
+        // Swipe to delete on touch
+        let startX = 0, startY = 0, currentX = 0, swiping = false;
+        row.addEventListener('touchstart', (e) => {
+          const t = e.touches[0];
+          startX = t.clientX;
+          startY = t.clientY;
+          currentX = 0;
+          swiping = false;
+        }, { passive: true });
+        row.addEventListener('touchmove', (e) => {
+          const t = e.touches[0];
+          currentX = t.clientX - startX;
+          const dy = Math.abs(t.clientY - startY);
+          if (Math.abs(currentX) > 8 && dy < 30) {
+            swiping = true;
+            row.classList.add('swiping');
+            row.style.setProperty('--swipe-x', Math.min(0, currentX) + 'px');
+          }
+        }, { passive: true });
+        row.addEventListener('touchend', () => {
+          if (swiping) {
+            if (currentX < -80) {
+              openDeleteSheet(id);
+            } else {
+              row.style.setProperty('--swipe-x', '0px');
+            }
+            setTimeout(() => row.classList.remove('swiping'), 50);
+            swiping = false;
+          }
+        });
+      });
+    }
+
+    function findTask(id) {
+      const tasks = tasksByDate[currentDate] || [];
+      return tasks.find(t => t.id === id);
+    }
+
+    function toggleTask(id) {
+      const tasks = tasksByDate[currentDate] || [];
+      const idx = tasks.findIndex(t => t.id === id);
+      if (idx < 0) return;
+      const t = tasks[idx];
+      t.done = !t.done;
+      t.doneAt = t.done ? Date.now() : null;
+      // If newly done, move to end (high order)
+      if (t.done) {
+        const maxOrder = tasks.reduce((m, x) => Math.max(m, x.order), -1);
+        t.order = maxOrder + 1;
+      }
+      tasksByDate[currentDate] = tasks;
+      saveTasks();
+      render();
+    }
+
+    // ----- Delete sheet -----
+    let deleteTarget = null;
+    function openDeleteSheet(id) {
+      deleteTarget = id;
+      document.getElementById('sheet').classList.add('show');
+      document.getElementById('sheetBackdrop').classList.add('show');
+    }
+    function closeDeleteSheet() {
+      deleteTarget = null;
+      document.getElementById('sheet').classList.remove('show');
+      document.getElementById('sheetBackdrop').classList.remove('show');
+    }
+    document.getElementById('sheetCancel').addEventListener('click', closeDeleteSheet);
+    document.getElementById('sheetBackdrop').addEventListener('click', closeDeleteSheet);
+    document.getElementById('sheetDelete').addEventListener('click', () => {
+      if (deleteTarget) {
+        const tasks = (tasksByDate[currentDate] || []).filter(t => t.id !== deleteTarget);
+        tasksByDate[currentDate] = tasks;
+        saveTasks();
+        render();
+        showToast('已删除');
+      }
+      closeDeleteSheet();
+    });
+
+    // ----- Date navigation -----
+    function gotoDate(dateKeyStr, direction) {
+      currentDate = dateKeyStr;
+      saveCurrentDate();
+      const list = document.getElementById('listArea');
+      list.classList.remove('day-transition', 'day-transition-back');
+      void list.offsetWidth; // reflow
+      list.classList.add(direction > 0 ? 'day-transition' : 'day-transition-back');
+      render();
+    }
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      gotoDate(dayOffset(currentDate, -1), -1);
+    });
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      gotoDate(dayOffset(currentDate, 1), 1);
+    });
+
+    // Horizontal drag on list area to switch day
+    let touchStartX = 0, touchStartY = 0, dragging = false;
+    const listArea = document.getElementById('listArea');
+    listArea.addEventListener('touchstart', (e) => {
+      const t = e.touches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+      dragging = false;
+    }, { passive: true });
+    listArea.addEventListener('touchmove', (e) => {
+      const t = e.touches[0];
+      const dx = t.clientX - touchStartX;
+      const dy = Math.abs(t.clientY - touchStartY);
+      if (Math.abs(dx) > 30 && dy < 30) {
+        dragging = true;
+      }
+    }, { passive: true });
+    listArea.addEventListener('touchend', (e) => {
+      if (!dragging) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - touchStartX;
+      if (Math.abs(dx) > 50) {
+        if (dx > 0) {
+          gotoDate(dayOffset(currentDate, -1), -1);
+        } else {
+          gotoDate(dayOffset(currentDate, 1), 1);
+        }
+      }
+      dragging = false;
+    });
+
+    // Mouse horizontal drag (for desktop testing)
+    let mouseStartX = 0, mouseDragging = false;
+    listArea.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      mouseStartX = e.clientX;
+      mouseDragging = true;
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!mouseDragging) return;
+      const dx = e.clientX - mouseStartX;
+      if (Math.abs(dx) > 80) {
+        if (dx > 0) {
+          gotoDate(dayOffset(currentDate, -1), -1);
+        } else {
+          gotoDate(dayOffset(currentDate, 1), 1);
+        }
+        mouseStartX = e.clientX;
+      }
+    });
+    document.addEventListener('mouseup', () => {
+      mouseDragging = false;
+    });
+
+    // ----- Toast -----
+    let toastTimer = null;
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 1500);
+    }
+
+    // ----- Status bar time -----
+    function updateTime() {
+      const d = new Date();
+      const h = String(d.getHours()).padStart(2, '0');
+      const m = String(d.getMinutes()).padStart(2, '0');
+      document.getElementById('time').textContent = `${h}:${m}`;
+    }
+    setInterval(updateTime, 30000);
+    updateTime();
+
+    // ----- First-time hint -----
+    if (!localStorage.getItem(SEEN_KEY)) {
+      const hint = document.getElementById('hint');
+      setTimeout(() => {
+        hint.classList.add('show');
+        setTimeout(() => {
+          hint.classList.remove('show');
+          localStorage.setItem(SEEN_KEY, '1');
+        }, 3500);
+      }, 800);
+    }
+
+    // ----- Seed sample data on first visit (optional) -----
+    if (Object.keys(tasksByDate).length === 0) {
+      const today = dateKey(new Date());
+      tasksByDate[today] = [
+        { id: 's1', text: '☀️ 早起晨跑 30 分钟', done: false, order: 0, createdAt: Date.now(), doneAt: null },
+        { id: 's2', text: '📧 回复重要邮件', done: false, order: 1, createdAt: Date.now(), doneAt: null },
+        { id: 's3', text: '☕️ 买一杯美式', done: true, order: 2, createdAt: Date.now(), doneAt: Date.now() - 300000 },
+        { id: 's4', text: '📚 读完《代码大全》第 3 章', done: false, order: 3, createdAt: Date.now(), doneAt: null },
+        { id: 's5', text: '💻 完成 Today App 上架准备', done: true, order: 4, createdAt: Date.now(), doneAt: Date.now() - 600000 }
+      ];
+      saveTasks();
+    }
+
+    // ----- Initial render -----
+    render();
+
+    // ----- Keyboard: arrow keys to navigate days -----
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      if (e.key === 'ArrowLeft') {
+        gotoDate(dayOffset(currentDate, -1), -1);
+      } else if (e.key === 'ArrowRight') {
+        gotoDate(dayOffset(currentDate, 1), 1);
+      }
+    });
+  </script>
+</body>
+</html>
