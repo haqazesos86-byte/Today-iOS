@@ -436,7 +436,7 @@ jobs:
     # Only runs when user has configured Apple credentials as GitHub Secrets
     runs-on: macos-latest
     needs: build
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.upload_to_store == 'true' }}
+    if: false  # Disabled by default; enable after adding APPLE_* secrets
     steps:
       - uses: actions/checkout@v4
 
@@ -453,21 +453,11 @@ jobs:
           echo "$API_KEY_BASE64" | base64 --decode > ~/private_keys/AuthKey_${{ secrets.APPLE_KEY_ID }}.p8
           ls -la ~/private_keys/
 
-      - name: Configure signing (if certs provided)
-        if: ${{ secrets.APPLE_TEAM_ID != '' }}
-        env:
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: |
-          echo "Team ID: $APPLE_TEAM_ID"
-          # Update project to use this team
-          # This is a placeholder — actual signing setup requires more configuration
-
-      - name: Build & upload via xcodebuild (placeholder)
-        if: ${{ env.READY_TO_UPLOAD == 'true' }}
+      - name: Build & upload via xcodebuild
+        if: ${{ env.READY_TO_UPLOAD != '' }}
         run: |
           echo "⚠️ Upload step requires manual configuration with your Apple Developer credentials"
           echo "Required secrets: APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_KEY_CONTENT, APPLE_KEY_ISSUER_ID"
-          echo "Once provided, set workflow_dispatch input 'upload_to_store=true' to trigger"
 
   check-code:
     name: Swift Syntax Check
