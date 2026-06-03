@@ -322,30 +322,48 @@ jobs:
             RUNTIME="com.apple.CoreSimulator.SimRuntime.iOS-18-4"
           fi
 
+          # List available device types for debugging
+          echo "Available device types (filtered for iPhone):"
+          xcrun simctl list devicetypes | grep -i "iPhone" | head -20
+          echo "---"
+          echo "Using runtime: $RUNTIME"
+
+          # Try these device types in order (newer ones may not exist on old Xcode)
           declare -A DEVICES=(
-            ["6.5"]="com.apple.CoreSimulator.SimDeviceType.iPhone-11-Pro-Max"
-            ["6.7"]="com.apple.CoreSimulator.SimDeviceType.iPhone-14-Pro-Max"
+            ["6.7"]="com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max"
+            ["6.5"]="com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro"
             ["5.5"]="com.apple.CoreSimulator.SimDeviceType.iPhone-8-Plus"
           )
 
           SCENARIOS=("1" "2" "3")
 
-          for SIZE in "6.5" "6.7" "5.5"; do
+          for SIZE in "6.7" "6.5" "5.5"; do
             DEV_TYPE="${DEVICES[$SIZE]}"
-            echo "📱 Capturing $SIZE\" ($DEV_TYPE)"
+            echo "📱 Trying $SIZE\" with $DEV_TYPE"
 
+            # Try to create, fall back to existing
             DEVICE=$(xcrun simctl create "Today-$SIZE" "$DEV_TYPE" "$RUNTIME" 2>/dev/null || echo "")
             if [ -z "$DEVICE" ]; then
-              DEVICE=$(xcrun simctl list devices available | grep -E "iPhone.*($SIZE|Pro)" | head -1 | grep -oE '\([A-F0-9-]{36}\)' | tr -d '()')
+              # Try simpler names
+              for TRY_TYPE in "iPhone-15-Pro" "iPhone-14-Pro" "iPhone-11" "iPhone-XS-Max"; do
+                DEVICE=$(xcrun simctl create "Today-$SIZE" "com.apple.CoreSimulator.SimDeviceType.$TRY_TYPE" "$RUNTIME" 2>/dev/null || echo "")
+                if [ -n "$DEVICE" ]; then break; fi
+              done
             fi
             if [ -z "$DEVICE" ]; then
-              echo "  ⚠️ No device found for $SIZE\", skipping"
+              # Last resort: use any available iPhone
+              DEVICE=$(xcrun simctl list devices available | grep -E "iPhone" | head -1 | grep -oE '\([A-F0-9-]{36}\)' | tr -d '()')
+            fi
+            if [ -z "$DEVICE" ]; then
+              echo "  ⚠️ No device available, skipping $SIZE\""
               continue
             fi
+            echo "  Using device: $DEVICE"
 
             xcrun simctl boot "$DEVICE" 2>/dev/null || true
-            for i in 1 2 3 4 5 6 7 8; do
+            for i in 1 2 3 4 5 6 7 8 9 10; do
               if xcrun simctl list devices | grep "$DEVICE" | grep -q "(Booted)"; then
+                echo "  ✅ Booted in $((i*3))s"
                 break
               fi
               sleep 3
@@ -368,7 +386,7 @@ jobs:
               OUT="app-store-screenshots/${SIZE}-${NAME}.png"
               xcrun simctl io "$DEVICE" screenshot --type=png --mask=ignored "$OUT" 2>/dev/null
               if [ -f "$OUT" ]; then
-                echo "  ✅ $OUT"
+                echo "  ✅ $OUT captured"
               else
                 echo "  ⚠️ Failed: $OUT"
               fi
@@ -392,11 +410,12 @@ jobs:
             sips -z "$H" "$W" "$f" --out "${f%.png}-resized.png" 2>/dev/null
             if [ -f "${f%.png}-resized.png" ]; then
               rm "$f"
-              echo "  Resized: $(basename $f) → ${W}×${H}"
+              echo "  Resized: $(basename "$f") → ${W}×${H}"
             fi
           done
 
-          ls -la app-store-screenshots/
+          echo "---Final screenshots---"
+          ls -la app-store-screenshots/ 2>/dev/null || echo "No screenshots generated"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
