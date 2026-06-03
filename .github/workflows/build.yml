@@ -318,6 +318,7 @@ jobs:
 
       - name: Generate App Store screenshots (multiple device sizes)
         continue-on-error: true
+        timeout-minutes: 12
         run: |
           chmod +x scripts/generate-app-store-screenshots.sh
           bash scripts/generate-app-store-screenshots.sh "${{ github.workspace }}" "$APP_PATH"

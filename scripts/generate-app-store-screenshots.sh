@@ -16,21 +16,20 @@ APP_PATH="$2"
 
 # Array of "size:device_type" pairs
 DEVICES=(
-  "6.7:com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max"
-  "6.5:com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro"
-  "5.5:com.apple.CoreSimulator.SimDeviceType.iPhone-8-Plus"
+  "6.7:com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max:1290:2796"
+  "6.5:com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro:1242:2688"
+  "5.5:com.apple.CoreSimulator.SimDeviceType.iPhone-8-Plus:1242:2208"
 )
 
 SCENARIOS=("1" "2" "3")
 
 for ENTRY in "${DEVICES[@]}"; do
-  SIZE="${ENTRY%%:*}"
-  DEV_TYPE="${ENTRY##*:}"
-  echo "📱 Capturing $SIZE\" ($DEV_TYPE)"
+  IFS=':' read -r SIZE DEV_TYPE TARGET_W TARGET_H <<< "$ENTRY"
+  echo "📱 Capturing $SIZE\" (target ${TARGET_W}×${TARGET_H})"
 
   DEVICE=$(xcrun simctl create "Today-$SIZE" "$DEV_TYPE" "$RUNTIME" 2>/dev/null || echo "")
   if [ -z "$DEVICE" ]; then
-    for TRY_TYPE in "iPhone-15-Pro" "iPhone-14-Pro" "iPhone-11" "iPhone-XS-Max"; do
+    for TRY_TYPE in "iPhone-15-Pro" "iPhone-14-Pro" "iPhone-11" "iPhone-XS-Max" "iPhone-13"; do
       DEVICE=$(xcrun simctl create "Today-$SIZE" "com.apple.CoreSimulator.SimDeviceType.$TRY_TYPE" "$RUNTIME" 2>/dev/null || echo "")
       if [ -n "$DEVICE" ]; then break; fi
     done
@@ -65,7 +64,7 @@ for ENTRY in "${DEVICES[@]}"; do
     esac
 
     SIMCTL_CHILD_SEED_SAMPLE_DATA=$SCENARIO xcrun simctl launch "$DEVICE" com.today.app 2>&1 | head -1
-    sleep 8
+    sleep 6
 
     OUT="app-store-screenshots/${SIZE}-${NAME}.png"
     xcrun simctl io "$DEVICE" screenshot --type=png --mask=ignored "$OUT" 2>/dev/null
@@ -80,23 +79,26 @@ for ENTRY in "${DEVICES[@]}"; do
   xcrun simctl delete "$DEVICE" 2>/dev/null || true
 done
 
-# Resize to exact App Store dimensions
-for f in app-store-screenshots/*.png; do
-  [ -f "$f" ] || continue
-  case "$(basename "$f" .png)" in
-    6.5-*) DIM="1242 2688" ;;
-    6.7-*) DIM="1290 2796" ;;
-    5.5-*) DIM="1242 2208" ;;
-    *) continue ;;
-  esac
-  W=$(echo $DIM | cut -d' ' -f1)
-  H=$(echo $DIM | cut -d' ' -f2)
-  sips -z "$H" "$W" "$f" --out "${f%.png}-resized.png" 2>/dev/null
-  if [ -f "${f%.png}-resized.png" ]; then
-    rm "$f"
-    echo "  Resized: $(basename "$f") → ${W}×${H}"
-  fi
+# Resize to exact App Store dimensions (use target dims from device list)
+for ENTRY in "${DEVICES[@]}"; do
+  IFS=':' read -r SIZE _ TARGET_W TARGET_H <<< "$ENTRY"
+  for f in app-store-screenshots/${SIZE}-*.png; do
+    [ -f "$f" ] || continue
+    OUT="${f%.png}-resized.png"
+    sips -z "$TARGET_H" "$TARGET_W" "$f" --out "$OUT" 2>/dev/null
+    if [ -f "$OUT" ]; then
+      # Verify the resized file actually has the target dimensions
+      ACTUAL_W=$(sips -g pixelWidth "$OUT" 2>/dev/null | tail -1 | awk -F': ' '{print $2}')
+      ACTUAL_H=$(sips -g pixelHeight "$OUT" 2>/dev/null | tail -1 | awk -F': ' '{print $2}')
+      if [ "$ACTUAL_W" = "$TARGET_W" ] && [ "$ACTUAL_H" = "$TARGET_H" ]; then
+        rm "$f"
+        echo "  Resized $(basename "$f") → ${TARGET_W}×${TARGET_H} ✅"
+      else
+        echo "  ⚠️ Resize failed for $(basename "$f"): got ${ACTUAL_W}×${ACTUAL_H}"
+      fi
+    fi
+  done
 done
 
-echo "---Final screenshots---"
+echo "---Final App Store screenshots---"
 ls -la app-store-screenshots/ 2>/dev/null || echo "No screenshots generated"
