@@ -1,0 +1,53 @@
+name: Deploy Today Web App to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+# Required for GitHub Pages
+permissions:
+  pages: write
+  id-token: write
+  contents: read
+
+# Don't deploy on a fork's PR — only on the main repo
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Build web artifact
+        run: |
+          mkdir -p _site
+          cp web/index.html _site/index.html
+          # Redirect page for missing files
+          cat > _site/404.html << 'EOF'
+          <!DOCTYPE html>
+          <html><head><meta charset="utf-8"><title>Today</title>
+          <meta http-equiv="refresh" content="0;url=index.html">
+          </head><body>Redirecting to <a href="index.html">index.html</a></body></html>
+          EOF
+          echo "📦 Web artifact built"
+          ls -la _site/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          url: ${{ steps.deployment.outputs.page_url }}
