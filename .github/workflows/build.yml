@@ -323,6 +323,29 @@ jobs:
           chmod +x scripts/generate-app-store-screenshots.sh
           bash scripts/generate-app-store-screenshots.sh "${{ github.workspace }}" "$APP_PATH"
 
+      - name: Resize App Store screenshots to exact dimensions
+        continue-on-error: true
+        run: |
+          cd "${{ github.workspace }}"
+          echo "Resizing all PNGs to App Store exact dimensions..."
+          # 6.5" iPhone 11 Pro Max = 1242x2688
+          for f in app-store-screenshots/6.5-*.png; do
+            [ -f "$f" ] || continue
+            sips -z 2688 1242 "$f" --out "${f%.png}-final.png" 2>/dev/null && rm "$f" && mv "${f%.png}-final.png" "$f" && echo "  $(basename "$f") → 1242×2688"
+          done
+          # 6.7" iPhone 14/15/16 Pro Max = 1290x2796
+          for f in app-store-screenshots/6.7-*.png; do
+            [ -f "$f" ] || continue
+            sips -z 2796 1290 "$f" --out "${f%.png}-final.png" 2>/dev/null && rm "$f" && mv "${f%.png}-final.png" "$f" && echo "  $(basename "$f") → 1290×2796"
+          done
+          # 5.5" iPhone 8 Plus = 1242x2208
+          for f in app-store-screenshots/5.5-*.png; do
+            [ -f "$f" ] || continue
+            sips -z 2208 1242 "$f" --out "${f%.png}-final.png" 2>/dev/null && rm "$f" && mv "${f%.png}-final.png" "$f" && echo "  $(basename "$f") → 1242×2208"
+          done
+          echo "---Final---"
+          file app-store-screenshots/*.png 2>/dev/null | head -10
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
