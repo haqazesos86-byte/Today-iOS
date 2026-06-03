@@ -17,5 +17,6 @@ Package.resolved
 
 # Build artifacts
 /build/
+artifacts/
 *.log
 *_Screenshot.png
