@@ -3,79 +3,49 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>今天 — 极简每日待办</title>
+  <title>Today — 极简每日待办</title>
+
+  <!-- Editorial typography: serif headlines + geometric sans body -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
   <style>
     /* ============================================================
-       今日 · Today
-       Design language:
-       - 新海诚动漫配色 (天空渐变 + 黄昏暖光)
-       - 番茄 Todo 卡片式 UI (圆角 22px, 圆形图标, 彩色分类)
-       - 二次元氛围 (云朵 SVG, 光晕, 手绘感)
+       今日 v3 — Editorial + Soft UI
+       Reference: Apple Reminders · Things 3 · Linear · Cron
        ============================================================ */
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body {
       height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "微软雅黑", sans-serif;
-      color: #3D3D5C;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", sans-serif;
+      color: #0A0A0A;
+      background: #FAFAF7;
       overflow: hidden;
       user-select: none;
       -webkit-user-select: none;
+      font-feature-settings: "ss01", "cv11";
+      letter-spacing: -0.005em;
     }
     button { font-family: inherit; background: none; border: none; cursor: pointer; color: inherit; }
     input { font-family: inherit; }
 
-    /* === 天空背景（新海诚黄昏） === */
-    body {
-      background: linear-gradient(
-        180deg,
-        #FFB7C5 0%,       /* 樱花粉 */
-        #FFC988 30%,      /* 暖橙 */
-        #FFE8B0 55%,      /* 阳光黄 */
-        #B6E0F5 85%,      /* 天空蓝 */
-        #98C7E8 100%      /* 远山蓝 */
-      );
-      background-attachment: fixed;
-    }
-
-    /* === 云朵 SVG 层 === */
-    .cloud-layer {
+    /* Paper grain texture (SVG noise) */
+    body::before {
+      content: '';
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
+      inset: 0;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.025 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+      opacity: 1;
       pointer-events: none;
-      z-index: 0;
-      overflow: hidden;
+      z-index: 1;
+      mix-blend-mode: multiply;
     }
-    .cloud {
-      position: absolute;
-      opacity: 0.45;
-      filter: blur(0.5px);
-    }
-    .cloud-1 { top: 5%; left: -5%; width: 220px; opacity: 0.4; animation: drift 60s linear infinite; }
-    .cloud-2 { top: 18%; right: -3%; width: 180px; opacity: 0.35; animation: drift 80s linear infinite reverse; }
-    .cloud-3 { top: 32%; left: 10%; width: 140px; opacity: 0.3; animation: drift 100s linear infinite; }
-    .cloud-4 { top: 60%; right: 5%; width: 160px; opacity: 0.32; animation: drift 90s linear infinite reverse; }
-    @keyframes drift {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(40px); }
-    }
+    .phone { position: relative; z-index: 2; }
 
-    /* === 光晕（顶光） === */
-    .sun-glow {
-      position: fixed;
-      top: -80px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 400px;
-      height: 400px;
-      background: radial-gradient(circle, rgba(255, 240, 200, 0.55) 0%, rgba(255, 220, 180, 0.0) 60%);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    /* === 容器（模拟手机，但加圆角 + 阴影） === */
+    /* === Phone frame (desktop) === */
     .phone {
-      position: relative;
       max-width: 480px;
       width: 100%;
       height: 100%;
@@ -84,21 +54,20 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      z-index: 1;
     }
     @media (min-width: 600px) {
-      body { display: flex; align-items: center; justify-content: center; padding: 20px; }
+      body { display: flex; align-items: center; justify-content: center; padding: 32px 20px; }
       .phone {
-        border-radius: 40px;
+        border-radius: 28px;
         box-shadow:
-          0 30px 80px rgba(60, 50, 80, 0.25),
-          0 0 0 1px rgba(255, 255, 255, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.5);
-        overflow: hidden;
+          0 0 0 1px rgba(0,0,0,0.06),
+          0 30px 60px -20px rgba(0,0,0,0.12),
+          0 18px 36px -18px rgba(0,0,0,0.08);
+        background: #FAFAF7;
       }
     }
 
-    /* === 状态栏 === */
+    /* === Status bar === */
     .statusbar {
       height: 44px;
       display: flex;
@@ -107,519 +76,498 @@
       padding: 0 24px;
       font-size: 14px;
       font-weight: 600;
-      color: #3D3D5C;
+      color: #0A0A0A;
       flex-shrink: 0;
-      z-index: 2;
     }
     .statusbar .right { display: flex; align-items: center; gap: 6px; }
     .statusbar .battery {
-      width: 24px;
-      height: 12px;
-      border: 1.2px solid #3D3D5C;
+      width: 24px; height: 11px;
+      border: 1.2px solid #0A0A0A;
       border-radius: 3px;
       position: relative;
     }
     .statusbar .battery::after {
       content: '';
-      position: absolute;
-      top: 2px; left: 2px;
-      width: 70%;
-      height: 6px;
-      background: #3D3D5C;
+      position: absolute; top: 1.5px; left: 1.5px;
+      width: 70%; height: 5px;
+      background: #0A0A0A;
       border-radius: 1px;
     }
 
-    /* === 顶部大标题区（新海诚风） === */
-    .hero {
+    /* === Editorial header === */
+    .header {
       flex-shrink: 0;
-      padding: 8px 24px 20px;
+      padding: 4px 24px 24px;
       position: relative;
     }
-    .hero .greeting {
-      font-size: 14px;
-      color: rgba(61, 61, 92, 0.7);
-      margin-bottom: 4px;
-      font-weight: 500;
-    }
-    .hero .date {
-      font-size: 32px;
-      font-weight: 700;
-      color: #3D3D5C;
-      letter-spacing: -0.5px;
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-    }
-    .hero .date .day {
-      font-size: 16px;
-      color: #FF7B7B;
-      font-weight: 600;
-      background: rgba(255, 255, 255, 0.7);
-      padding: 4px 12px;
-      border-radius: 12px;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-    }
-    .hero .quote {
-      margin-top: 10px;
-      font-size: 13px;
-      color: rgba(61, 61, 92, 0.55);
-      font-style: italic;
-      letter-spacing: 0.3px;
-    }
-    .hero .nav {
-      position: absolute;
-      right: 24px;
-      top: 8px;
-      display: flex;
-      gap: 8px;
-    }
-    .hero .nav button {
-      width: 36px;
-      height: 36px;
-      background: rgba(255, 255, 255, 0.7);
-      border-radius: 50%;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      font-size: 18px;
-      color: #3D3D5C;
+    .header .top {
       display: flex;
       align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 8px rgba(60, 50, 80, 0.08);
-      transition: transform 0.2s, background 0.2s;
+      justify-content: space-between;
+      margin-bottom: 18px;
     }
-    .hero .nav button:active {
-      transform: scale(0.9);
-      background: rgba(255, 255, 255, 0.9);
+    .header .brand {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(10,10,10,0.45);
+    }
+    .header .actions {
+      display: flex;
+      gap: 4px;
+    }
+    .header .actions button {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      color: #0A0A0A;
+      border-radius: 10px;
+      transition: background 0.15s;
+    }
+    .header .actions button:hover { background: rgba(10,10,10,0.05); }
+    .header .actions button:active { background: rgba(10,10,10,0.1); }
+
+    .header .greeting {
+      font-family: 'Instrument Serif', serif;
+      font-size: 13px;
+      font-style: italic;
+      color: rgba(10,10,10,0.55);
+      letter-spacing: 0.01em;
+    }
+    .header .headline {
+      font-family: 'Instrument Serif', serif;
+      font-size: 48px;
+      line-height: 1.05;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      margin: 4px 0 6px;
+    }
+    .header .headline em {
+      font-style: italic;
+      color: #FF5733;
+    }
+    .header .meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: rgba(10,10,10,0.55);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+    .header .meta .dot {
+      width: 3px; height: 3px;
+      background: rgba(10,10,10,0.25);
+      border-radius: 50%;
     }
 
-    /* === 今日统计卡片（番茄 Todo 风） === */
-    .stats-card {
+    /* === Bento stats grid === */
+    .bento {
       flex-shrink: 0;
-      margin: 0 20px 16px;
-      background: rgba(255, 255, 255, 0.85);
-      border-radius: 22px;
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 10px;
+      padding: 0 20px 16px;
+    }
+    .bento .card {
+      background: #FFFFFF;
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow:
+        0 1px 2px rgba(0,0,0,0.04),
+        0 0 0 1px rgba(0,0,0,0.04);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .bento .card:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        0 2px 4px rgba(0,0,0,0.05),
+        0 12px 28px -8px rgba(0,0,0,0.1),
+        0 0 0 1px rgba(0,0,0,0.04);
+    }
+    /* Hero card - the big one */
+    .bento .hero {
+      grid-row: span 2;
+      background: linear-gradient(135deg, #FF5733 0%, #FF7A3D 100%);
+      color: white;
+      box-shadow:
+        0 1px 2px rgba(255,87,51,0.2),
+        0 0 0 1px rgba(255,87,51,0.1),
+        0 12px 28px -8px rgba(255,87,51,0.3);
+    }
+    .bento .hero .label {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.7;
+      font-weight: 600;
+    }
+    .bento .hero .pct {
+      font-family: 'Instrument Serif', serif;
+      font-size: 72px;
+      line-height: 1;
+      font-weight: 400;
+      letter-spacing: -0.04em;
+      margin: 12px 0 4px;
+    }
+    .bento .hero .pct::after {
+      content: '%';
+      font-size: 32px;
+      opacity: 0.6;
+      margin-left: 2px;
+    }
+    .bento .hero .sub {
+      font-size: 13px;
+      opacity: 0.85;
+      font-weight: 500;
+    }
+    .bento .hero .ring-mini {
+      position: absolute;
+      right: -30px; top: -30px;
+      width: 120px; height: 120px;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+    }
+    .bento .hero .ring-mini::after {
+      content: '';
+      position: absolute; inset: 8px;
+      border: 1.5px solid rgba(255,255,255,0.15);
+      border-radius: 50%;
+    }
+
+    /* Small cards (right column) */
+    .bento .small .label {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(10,10,10,0.5);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .bento .small .val {
+      font-family: 'Instrument Serif', serif;
+      font-size: 32px;
+      font-weight: 400;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .bento .small .val small {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      color: rgba(10,10,10,0.5);
+      font-weight: 500;
+      margin-left: 4px;
+    }
+    .bento .small .delta {
+      font-size: 11px;
+      color: #FF5733;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+    .bento .small .delta.neutral { color: rgba(10,10,10,0.4); }
+
+    /* === Section labels === */
+    .section-label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 0 24px;
+      margin: 24px 0 12px;
+    }
+    .section-label .label {
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(10,10,10,0.5);
+      font-weight: 600;
+    }
+    .section-label .count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: rgba(10,10,10,0.4);
+    }
+
+    /* === Task list === */
+    .list-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 20px 100px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .list-area::-webkit-scrollbar { display: none; }
+
+    .task-card {
+      background: #FFFFFF;
+      border-radius: 16px;
       padding: 16px 18px;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
       gap: 14px;
       box-shadow:
-        0 8px 24px rgba(60, 50, 80, 0.08),
-        0 1px 0 rgba(255, 255, 255, 0.8) inset;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.6);
-    }
-    .stats-card .ring {
-      position: relative;
-      width: 56px;
-      height: 56px;
-      flex-shrink: 0;
-    }
-    .stats-card .ring svg { transform: rotate(-90deg); }
-    .stats-card .ring .ring-bg { fill: none; stroke: rgba(61, 61, 92, 0.1); stroke-width: 6; }
-    .stats-card .ring .ring-fg { fill: none; stroke: #FF7B7B; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
-    .stats-card .ring .ring-text {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 13px;
-      font-weight: 700;
-      color: #3D3D5C;
-    }
-    .stats-card .info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .stats-card .info .label {
-      font-size: 12px;
-      color: rgba(61, 61, 92, 0.6);
-    }
-    .stats-card .info .title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #3D3D5C;
-    }
-    .stats-card .info .sub {
-      font-size: 12px;
-      color: #FF7B7B;
-      font-weight: 500;
-    }
-    .stats-card .pomo-btn {
-      width: 56px;
-      height: 56px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, #FF7B7B 0%, #FF9A8B 100%);
-      color: white;
-      font-size: 11px;
-      font-weight: 700;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 6px 16px rgba(255, 123, 123, 0.35);
-      transition: transform 0.2s;
-      flex-shrink: 0;
-    }
-    .stats-card .pomo-btn:active { transform: scale(0.93); }
-    .stats-card .pomo-btn .icon { font-size: 18px; line-height: 1; margin-bottom: 2px; }
-    .stats-card .pomo-btn .text { font-size: 9px; letter-spacing: 0.5px; }
-
-    /* === 任务列表 === */
-    .list-area {
-      flex: 1;
-      overflow-y: auto;
-      padding: 0 20px 16px;
-      -webkit-overflow-scrolling: touch;
-      position: relative;
-    }
-    .list-area::-webkit-scrollbar { display: none; }
-
-    .section-label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: rgba(61, 61, 92, 0.6);
-      font-weight: 600;
-      margin: 16px 4px 8px;
-      letter-spacing: 0.5px;
-    }
-    .section-label .count {
-      background: rgba(255, 255, 255, 0.7);
-      color: #FF7B7B;
-      padding: 1px 8px;
-      border-radius: 8px;
-      font-size: 11px;
-      font-weight: 700;
-    }
-    .section-label.divider {
-      position: relative;
-      margin: 20px 4px 8px;
-    }
-    .section-label.divider::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: rgba(61, 61, 92, 0.12);
-      z-index: -1;
-    }
-    .section-label.divider .label-text {
-      background: linear-gradient(180deg, rgba(255,231,176,0.9) 0%, rgba(182,224,245,0.9) 100%);
-      padding: 2px 10px;
-      border-radius: 10px;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-    }
-
-    .task-card {
-      background: rgba(255, 255, 255, 0.92);
-      border-radius: 18px;
-      padding: 14px 16px;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      box-shadow:
-        0 4px 16px rgba(60, 50, 80, 0.08),
-        0 1px 0 rgba(255, 255, 255, 0.9) inset;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      transition: opacity 0.3s, transform 0.3s;
+        0 1px 2px rgba(0,0,0,0.04),
+        0 0 0 1px rgba(0,0,0,0.04);
+      transition: opacity 0.3s, transform 0.3s, background 0.2s;
       cursor: pointer;
     }
-    .task-card.done {
-      opacity: 0.55;
-      background: rgba(255, 255, 255, 0.65);
-    }
-    .task-card.done .text { text-decoration: line-through; }
-    .task-card.removing {
-      opacity: 0;
-      transform: translateX(-100%);
-      pointer-events: none;
-    }
+    .task-card.done { opacity: 0.5; }
+    .task-card.done .text { text-decoration: line-through; text-decoration-color: rgba(10,10,10,0.4); text-decoration-thickness: 1.5px; }
+    .task-card.done .check { background: #0A0A0A; border-color: #0A0A0A; }
+    .task-card.done .check svg { opacity: 1; transform: scale(1); }
+    .task-card.done .icon { opacity: 0.5; }
+    .task-card.swiping { transform: translateX(var(--swipe-x, 0px)); transition: none; }
+    .task-card.removing { opacity: 0; transform: translateX(-100%); pointer-events: none; }
 
-    .task-icon {
-      width: 38px;
-      height: 38px;
+    .icon {
+      width: 40px; height: 40px;
       border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+      color: #0A0A0A;
     }
-    .task-icon.work { background: linear-gradient(135deg, #FFD3B6 0%, #FFAAA5 100%); }
-    .task-icon.learn { background: linear-gradient(135deg, #B6E0F5 0%, #98C7E8 100%); }
-    .task-icon.life { background: linear-gradient(135deg, #D4F1A0 0%, #B5E08C 100%); }
-    .task-icon.other { background: linear-gradient(135deg, #E0BBE4 0%, #C9A8D2 100%); }
+    .icon svg { width: 20px; height: 20px; }
+    .icon.work { background: #FFF0EB; color: #FF5733; }
+    .icon.learn { background: #EBF4FF; color: #0066FF; }
+    .icon.life { background: #EDF7EC; color: #2B8A3E; }
+    .icon.other { background: #F5F0FF; color: #6741D9; }
 
-    .task-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      min-width: 0;
-    }
-    .task-content .text {
+    .body { flex: 1; min-width: 0; }
+    .body .text {
       font-size: 15px;
-      color: #3D3D5C;
+      line-height: 1.35;
+      color: #0A0A0A;
       font-weight: 500;
-      line-height: 1.3;
+      letter-spacing: -0.005em;
       word-wrap: break-word;
-      transition: text-decoration-color 0.3s;
     }
-    .task-content .meta {
+    .body .meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 3px;
       font-size: 11px;
-      color: rgba(61, 61, 92, 0.5);
-      display: flex;
+      color: rgba(10,10,10,0.45);
+      font-weight: 500;
+    }
+    .body .meta .tag {
+      display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 3px;
+      padding: 2px 6px;
+      background: rgba(10,10,10,0.05);
+      border-radius: 4px;
     }
-    .task-content .meta .tag {
-      background: rgba(255, 123, 123, 0.12);
-      color: #FF7B7B;
-      padding: 1px 6px;
-      border-radius: 5px;
-      font-weight: 600;
-    }
-    .task-content .meta .time {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-    }
+    .body .meta .tag svg { width: 9px; height: 9px; }
 
-    .check-circle {
-      width: 22px;
-      height: 22px;
+    .check {
+      width: 22px; height: 22px;
       border-radius: 50%;
-      border: 1.5px solid rgba(61, 61, 92, 0.25);
+      border: 1.5px solid rgba(10,10,10,0.18);
       flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.25s;
+      position: relative;
     }
-    .task-card.done .check-circle {
-      background: linear-gradient(135deg, #FF7B7B 0%, #FF9A8B 100%);
-      border-color: transparent;
-      box-shadow: 0 2px 6px rgba(255, 123, 123, 0.35);
-    }
-    .check-circle svg {
-      width: 12px;
-      height: 12px;
-      opacity: 0;
-      transform: scale(0.5);
-      transition: opacity 0.3s, transform 0.3s;
-    }
-    .task-card.done .check-circle svg { opacity: 1; transform: scale(1); }
-    .check-circle svg path {
+    .check svg {
+      width: 12px; height: 12px;
       stroke: white;
       stroke-width: 2.5;
       stroke-linecap: round;
       stroke-linejoin: round;
       fill: none;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 0.2s, transform 0.2s;
     }
 
     .delete-btn {
-      width: 32px;
-      height: 32px;
+      width: 30px; height: 30px;
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #FF7B7B;
-      font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(10,10,10,0.35);
       opacity: 0;
-      transition: opacity 0.2s, background 0.2s;
+      transition: opacity 0.2s, color 0.2s;
       flex-shrink: 0;
     }
-    .delete-btn:hover { background: rgba(255, 123, 123, 0.1); }
+    .delete-btn:hover { color: #FF5733; }
     .task-card:hover .delete-btn { opacity: 1; }
     .task-card.swiping .delete-btn { opacity: 1; }
-    .task-card.swiping { transform: translateX(var(--swipe-x, 0px)); transition: none; }
 
-    /* === 空状态（新海诚插画） === */
+    /* === Empty state (using a clean SVG illustration) === */
     .empty {
       flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 16px;
-      padding: 40px 20px;
       text-align: center;
-    }
-    .empty .illustration {
-      width: 200px;
-      height: 200px;
-      position: relative;
-    }
-    .empty .text-main {
-      font-size: 17px;
-      color: #3D3D5C;
-      font-weight: 600;
-    }
-    .empty .text-sub {
-      font-size: 13px;
-      color: rgba(61, 61, 92, 0.6);
-      max-width: 240px;
-      line-height: 1.5;
+      padding: 40px 20px 60px;
     }
     .empty.hidden { display: none; }
+    .empty .art {
+      width: 180px;
+      height: 180px;
+      margin-bottom: 24px;
+      opacity: 0.9;
+    }
+    .empty .title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 24px;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      margin-bottom: 6px;
+    }
+    .empty .sub {
+      font-size: 13px;
+      color: rgba(10,10,10,0.5);
+      max-width: 220px;
+      line-height: 1.5;
+      font-weight: 400;
+    }
 
-    /* === 输入栏 === */
-    .input-bar {
-      flex-shrink: 0;
-      margin: 0 16px 16px;
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 24px;
-      padding: 6px 6px 6px 18px;
+    /* === Floating add input === */
+    .composer {
+      position: absolute;
+      bottom: 24px;
+      left: 20px; right: 20px;
+      max-width: 440px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-radius: 18px;
+      padding: 6px 6px 6px 16px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       box-shadow:
-        0 8px 24px rgba(60, 50, 80, 0.12),
-        0 1px 0 rgba(255, 255, 255, 0.9) inset;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.7);
+        0 1px 2px rgba(0,0,0,0.06),
+        0 0 0 1px rgba(0,0,0,0.04),
+        0 12px 32px -8px rgba(0,0,0,0.1);
       transition: box-shadow 0.3s;
     }
-    .input-bar.focused {
+    .composer.focused {
       box-shadow:
-        0 12px 32px rgba(60, 50, 80, 0.18),
-        0 1px 0 rgba(255, 255, 255, 0.9) inset,
-        0 0 0 2px rgba(255, 123, 123, 0.3);
+        0 1px 2px rgba(0,0,0,0.06),
+        0 0 0 2px #0A0A0A,
+        0 0 0 1px #0A0A0A,
+        0 16px 40px -8px rgba(0,0,0,0.15);
     }
-    .input-bar .plus-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: rgba(61, 61, 92, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      color: rgba(61, 61, 92, 0.5);
-      transition: all 0.3s;
+    .composer .plus {
+      width: 20px; height: 20px;
+      color: rgba(10,10,10,0.4);
       flex-shrink: 0;
+      transition: transform 0.3s, color 0.3s;
     }
-    .input-bar.focused .plus-btn {
-      background: linear-gradient(135deg, #FF7B7B 0%, #FF9A8B 100%);
-      color: white;
-      transform: rotate(45deg);
-    }
-    .input-bar input {
+    .composer.focused .plus { transform: rotate(45deg); color: #0A0A0A; }
+    .composer input {
       flex: 1;
       border: none;
       outline: none;
-      font-size: 15px;
-      color: #3D3D5C;
       background: transparent;
-      padding: 8px 0;
+      font-size: 15px;
+      font-weight: 400;
+      color: #0A0A0A;
+      padding: 10px 0;
+      letter-spacing: -0.005em;
     }
-    .input-bar input::placeholder { color: rgba(61, 61, 92, 0.4); }
-    .input-bar .submit-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #FF7B7B 0%, #FF9A8B 100%);
+    .composer input::placeholder { color: rgba(10,10,10,0.4); }
+    .composer .submit {
+      width: 36px; height: 36px;
+      border-radius: 12px;
+      background: #0A0A0A;
       color: white;
-      font-size: 18px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 12px rgba(255, 123, 123, 0.4);
-      transition: transform 0.2s;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
+      transition: all 0.2s;
     }
-    .input-bar .submit-btn:active { transform: scale(0.9); }
-    .input-bar .submit-btn:disabled { opacity: 0.4; box-shadow: none; }
+    .composer .submit:disabled { opacity: 0.25; }
+    .composer .submit:not(:disabled):active { transform: scale(0.92); }
+    .composer .submit svg { width: 16px; height: 16px; }
 
-    /* === 番茄钟模态 === */
-    .pomo-modal {
+    /* === Pomodoro sheet === */
+    .pomo-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(61, 61, 92, 0.45);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
+      background: rgba(10,10,10,0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s;
+      transition: opacity 0.25s;
     }
-    .pomo-modal.show { opacity: 1; pointer-events: auto; }
-    .pomo-box {
+    .pomo-overlay.show { opacity: 1; pointer-events: auto; }
+    .pomo-card {
       width: 280px;
-      background: white;
+      background: #FAFAF7;
       border-radius: 28px;
       padding: 28px 24px;
       text-align: center;
-      box-shadow: 0 20px 60px rgba(60, 50, 80, 0.3);
-      transform: scale(0.9);
+      box-shadow: 0 30px 60px -20px rgba(0,0,0,0.3);
+      transform: scale(0.94);
       transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    .pomo-modal.show .pomo-box { transform: scale(1); }
-    .pomo-box .label { font-size: 14px; color: rgba(61, 61, 92, 0.6); margin-bottom: 12px; }
-    .pomo-box .time {
-      font-size: 56px;
-      font-weight: 700;
-      color: #FF7B7B;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: -1px;
+    .pomo-overlay.show .pomo-card { transform: scale(1); }
+    .pomo-card .label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(10,10,10,0.5);
+      margin-bottom: 8px;
     }
-    .pomo-box .controls {
-      display: flex;
-      gap: 12px;
-      margin-top: 20px;
+    .pomo-card .time {
+      font-family: 'Instrument Serif', serif;
+      font-size: 64px;
+      line-height: 1;
+      font-weight: 400;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+      margin: 8px 0 24px;
+    }
+    .pomo-card .controls {
+      display: flex; gap: 8px;
       justify-content: center;
     }
-    .pomo-box .controls button {
-      padding: 10px 20px;
-      border-radius: 14px;
-      font-size: 14px;
+    .pomo-card .controls button {
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 13px;
       font-weight: 600;
-      background: rgba(255, 123, 123, 0.1);
-      color: #FF7B7B;
+      background: rgba(10,10,10,0.06);
+      color: #0A0A0A;
+      transition: all 0.2s;
     }
-    .pomo-box .controls button.primary {
-      background: linear-gradient(135deg, #FF7B7B 0%, #FF9A8B 100%);
+    .pomo-card .controls button.primary {
+      background: #0A0A0A;
       color: white;
     }
+    .pomo-card .controls button:active { transform: scale(0.96); }
 
     /* === Toast === */
     .toast {
       position: fixed;
-      bottom: 100px;
+      bottom: 120px;
       left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: rgba(61, 61, 92, 0.92);
+      transform: translateX(-50%) translateY(40px);
+      background: #0A0A0A;
       color: white;
-      padding: 10px 20px;
-      border-radius: 16px;
-      font-size: 14px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
       opacity: 0;
-      transition: opacity 0.3s, transform 0.3s;
+      transition: opacity 0.25s, transform 0.25s;
       pointer-events: none;
-      z-index: 2000;
+      z-index: 200;
+      box-shadow: 0 8px 24px -4px rgba(0,0,0,0.2);
     }
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
     /* === Hint === */
     .hint {
@@ -627,321 +575,269 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: rgba(61, 61, 92, 0.9);
+      background: rgba(10,10,10,0.95);
       color: white;
-      padding: 12px 20px;
+      padding: 14px 20px;
       border-radius: 16px;
-      font-size: 13px;
+      font-size: 12px;
+      line-height: 1.5;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.4s;
+      transition: opacity 0.3s;
       z-index: 50;
       text-align: center;
       max-width: 280px;
-      line-height: 1.5;
     }
     .hint.show { opacity: 1; }
+    .hint .key {
+      display: inline-block;
+      padding: 1px 6px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      margin: 0 2px;
+    }
+
+    /* === Day transition === */
+    .list-area.day-in { animation: dayIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .list-area.day-out { animation: dayOut 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    @keyframes dayIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes dayOut { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
   </style>
 </head>
 <body>
-  <!-- 装饰层：云朵 -->
-  <div class="cloud-layer">
-    <svg class="cloud cloud-1" viewBox="0 0 200 80">
-      <path d="M40 60 Q20 60 20 45 Q20 30 35 32 Q40 15 60 22 Q75 10 95 25 Q115 18 130 30 Q160 30 165 50 Q180 55 175 70 Q150 80 40 60 Z" fill="white"/>
-    </svg>
-    <svg class="cloud cloud-2" viewBox="0 0 200 80">
-      <path d="M40 60 Q20 60 20 45 Q20 30 35 32 Q40 15 60 22 Q75 10 95 25 Q115 18 130 30 Q160 30 165 50 Q180 55 175 70 Q150 80 40 60 Z" fill="white"/>
-    </svg>
-    <svg class="cloud cloud-3" viewBox="0 0 200 80">
-      <path d="M40 60 Q20 60 20 45 Q20 30 35 32 Q40 15 60 22 Q75 10 95 25 Q115 18 130 30 Q160 30 165 50 Q180 55 175 70 Q150 80 40 60 Z" fill="white"/>
-    </svg>
-    <svg class="cloud cloud-4" viewBox="0 0 200 80">
-      <path d="M40 60 Q20 60 20 45 Q20 30 35 32 Q40 15 60 22 Q75 10 95 25 Q115 18 130 30 Q160 30 165 50 Q180 55 175 70 Q150 80 40 60 Z" fill="white"/>
-    </svg>
-  </div>
-  <div class="sun-glow"></div>
-
   <div class="phone">
     <div class="statusbar">
       <span class="time" id="time">9:41</span>
       <div class="right">
         <span>●●●●</span>
-        <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 2 C 5 2 3 4 1 6 L 0 5 C 2 3 5 0 8 0 C 11 0 14 3 16 5 L 15 6 C 13 4 11 2 8 2 Z M 8 5 C 6 5 5 6 4 7 L 3 6 C 4 5 6 3 8 3 C 10 3 12 5 13 6 L 12 7 C 11 6 10 5 8 5 Z" fill="#3D3D5C"/><circle cx="8" cy="9" r="1.5" fill="#3D3D5C"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 2 C 5 2 3 4 1 6 L 0 5 C 2 3 5 0 8 0 C 11 0 14 3 16 5 L 15 6 C 13 4 11 2 8 2 Z M 8 5 C 6 5 5 6 4 7 L 3 6 C 4 5 6 3 8 3 C 10 3 12 5 13 6 L 12 7 C 11 6 10 5 8 5 Z" fill="#0A0A0A"/><circle cx="8" cy="9" r="1.5" fill="#0A0A0A"/></svg>
         <div class="battery"></div>
       </div>
     </div>
 
-    <div class="hero">
-      <div class="nav">
-        <button id="prevBtn" title="前一天">‹</button>
-        <button id="nextBtn" title="后一天">›</button>
+    <div class="header">
+      <div class="top">
+        <div class="brand">Today · 今日</div>
+        <div class="actions">
+          <button id="prevBtn" aria-label="前一天">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button id="nextBtn" aria-label="后一天">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
       </div>
-      <div class="greeting" id="greeting">☀️ 早安</div>
-      <div class="date">
-        <span id="dateTitle">今天</span>
-        <span class="day" id="dateDay">星期三</span>
+      <div class="greeting" id="greeting">Good morning</div>
+      <h1 class="headline" id="headline">Make today<br><em>count</em>.</h1>
+      <div class="meta">
+        <span id="weekday">Wednesday</span>
+        <span class="dot"></span>
+        <span id="dateText">June 3</span>
+        <span class="dot"></span>
+        <span id="timeText">9:41</span>
       </div>
-      <div class="quote" id="dailyQuote">无论今天发生什么，太阳依旧会升起 ✨</div>
     </div>
 
-    <div class="stats-card" id="statsCard">
-      <div class="ring">
-        <svg width="56" height="56" viewBox="0 0 56 56">
-          <circle class="ring-bg" cx="28" cy="28" r="24"/>
-          <circle class="ring-fg" cx="28" cy="28" r="24" stroke-dasharray="150.8" stroke-dashoffset="150.8" id="ringFg"/>
-        </svg>
-        <div class="ring-text" id="ringText">0%</div>
+    <div class="bento">
+      <div class="card hero">
+        <div class="ring-mini"></div>
+        <div class="label">今日完成</div>
+        <div class="pct" id="pct">0</div>
+        <div class="sub" id="heroSub">开始新的一天</div>
       </div>
-      <div class="info">
-        <div class="label">今日完成度</div>
-        <div class="title" id="statsTitle">开始你的一天 ✨</div>
-        <div class="sub" id="statsSub">0 / 0 已完成</div>
+      <div class="card small">
+        <div class="label">Tasks</div>
+        <div class="val" id="taskCount">0<small>项</small></div>
+        <div class="delta neutral" id="taskDelta">添加开始</div>
       </div>
-      <button class="pomo-btn" id="pomoBtn">
-        <span class="icon">🍅</span>
-        <span class="text">FOCUS</span>
-      </button>
+      <div class="card small">
+        <div class="label">Streak</div>
+        <div class="val" id="streakCount">0<small>天</small></div>
+        <div class="delta" id="streakDelta">开始你的连胜</div>
+      </div>
     </div>
 
     <div class="list-area" id="listArea">
-      <div class="empty" id="emptyState">
-        <div class="illustration">
-          <svg viewBox="0 0 200 200" width="200" height="200">
-            <!-- 远山 -->
-            <path d="M 20 130 Q 50 100 80 110 Q 110 80 140 95 Q 170 75 180 100 L 180 200 L 20 200 Z" fill="rgba(152,199,232,0.4)"/>
-            <path d="M 10 150 Q 40 130 70 140 Q 100 120 130 130 Q 160 115 190 135 L 190 200 L 10 200 Z" fill="rgba(182,224,245,0.5)"/>
-            <!-- 草地 -->
-            <ellipse cx="100" cy="180" rx="80" ry="8" fill="rgba(139,195,139,0.3)"/>
-            <!-- 一棵樱花树 -->
-            <rect x="98" y="130" width="4" height="30" fill="#8B6F47" rx="1"/>
-            <circle cx="100" cy="125" r="22" fill="rgba(255,183,197,0.7)"/>
-            <circle cx="88" cy="120" r="14" fill="rgba(255,200,210,0.6)"/>
-            <circle cx="112" cy="118" r="13" fill="rgba(255,200,210,0.6)"/>
-            <circle cx="95" cy="135" r="10" fill="rgba(255,183,197,0.5)"/>
-            <circle cx="108" cy="132" r="11" fill="rgba(255,183,197,0.5)"/>
-            <!-- 飘落的花瓣 -->
-            <circle cx="60" cy="80" r="3" fill="rgba(255,183,197,0.7)"/>
-            <circle cx="140" cy="100" r="2.5" fill="rgba(255,183,197,0.6)"/>
-            <circle cx="50" cy="140" r="2" fill="rgba(255,183,197,0.5)"/>
-            <circle cx="155" cy="150" r="2.5" fill="rgba(255,183,197,0.6)"/>
-            <!-- 太阳 -->
-            <circle cx="160" cy="40" r="18" fill="rgba(255,220,180,0.7)"/>
-            <circle cx="160" cy="40" r="12" fill="rgba(255,240,200,0.9)"/>
-            <!-- 咖啡杯 -->
-            <g transform="translate(70, 145)">
-              <ellipse cx="20" cy="22" rx="22" ry="3" fill="rgba(139,111,71,0.2)"/>
-              <path d="M 4 4 Q 4 22 20 22 Q 36 22 36 4 Z" fill="white" stroke="rgba(61,61,92,0.4)" stroke-width="1"/>
-              <ellipse cx="20" cy="4" rx="16" ry="3" fill="rgba(61,61,92,0.6)"/>
-              <path d="M 36 8 Q 44 8 44 14 Q 44 20 36 20" fill="none" stroke="rgba(61,61,92,0.4)" stroke-width="1.2"/>
-              <!-- 蒸汽 -->
-              <path d="M 14 -2 Q 12 -8 16 -10 Q 14 -14 18 -16" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round"/>
-              <path d="M 22 -4 Q 20 -10 24 -12 Q 22 -16 26 -18" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/>
-            </g>
-          </svg>
-        </div>
-        <div class="text-main">今天可以偷个懒了</div>
-        <div class="text-sub">做点喜欢的事吧 ☕️ — 阳光正好，樱花正开</div>
+      <div class="empty hidden" id="emptyState">
+        <svg class="art" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Editorial flat illustration: minimalist figure at desk -->
+          <circle cx="100" cy="80" r="50" fill="#F0EDE6"/>
+          <!-- Desk -->
+          <rect x="20" y="135" width="160" height="3" fill="#0A0A0A" opacity="0.08"/>
+          <rect x="40" y="138" width="120" height="40" fill="#F0EDE6" rx="2"/>
+          <!-- Laptop -->
+          <rect x="65" y="115" width="70" height="40" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.5" rx="2"/>
+          <rect x="65" y="115" width="70" height="2" fill="#0A0A0A"/>
+          <rect x="58" y="155" width="84" height="3" fill="#0A0A0A" rx="1.5"/>
+          <!-- Coffee cup -->
+          <path d="M28 130 L34 150 Q34 154 38 154 L42 154 Q46 154 46 150 L52 130 Z" fill="#FF5733"/>
+          <path d="M50 132 Q58 132 58 140 Q58 148 50 148" stroke="#FF5733" stroke-width="1.5" fill="none"/>
+          <!-- Steam -->
+          <path d="M36 122 Q34 117 38 114" stroke="#0A0A0A" stroke-width="1" opacity="0.3" stroke-linecap="round"/>
+          <path d="M42 124 Q40 119 44 116" stroke="#0A0A0A" stroke-width="1" opacity="0.3" stroke-linecap="round"/>
+          <!-- Plant -->
+          <rect x="140" y="148" width="14" height="12" fill="#2B8A3E" opacity="0.8" rx="1"/>
+          <path d="M147 148 Q147 138 152 132 Q142 138 142 148" fill="#2B8A3E"/>
+          <path d="M147 148 Q147 138 142 132 Q152 138 152 148" fill="#3DA94E"/>
+          <!-- Light from above -->
+          <circle cx="100" cy="100" r="80" fill="url(#glow)" opacity="0.3"/>
+          <defs>
+            <radialGradient id="glow">
+              <stop offset="0%" stop-color="#FF5733" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#FF5733" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+        </svg>
+        <div class="title">Nothing on the list.</div>
+        <div class="sub">A clean page is a beautiful thing. Add your first task below.</div>
       </div>
       <div id="taskList"></div>
     </div>
 
-    <div class="input-bar" id="inputBar">
-      <div class="plus-btn">+</div>
+    <div class="composer" id="composer">
+      <svg class="plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
       <input
         type="text"
         id="taskInput"
-        placeholder="想做点什么？"
+        placeholder="What needs to be done?"
         autocomplete="off"
         autocorrect="off"
         autocapitalize="off"
         spellcheck="false"
       />
-      <button class="submit-btn" id="submitBtn" disabled>→</button>
+      <button class="submit" id="submitBtn" disabled aria-label="添加">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </button>
     </div>
 
     <div class="hint" id="hint">
-      左右滑动切换日期 ✨<br>
-      <span style="opacity:0.7;font-size:11px">← → 键也可以 · 点击 🍅 启动番茄钟</span>
+      <strong>Quick tour</strong><br>
+      <span class="key">←</span> <span class="key">→</span> switch days<br>
+      swipe left to delete · click ⌘ to focus
     </div>
   </div>
 
-  <div class="pomo-modal" id="pomoModal">
-    <div class="pomo-box">
-      <div class="label">🍅 专注时刻</div>
+  <div class="pomo-overlay" id="pomoOverlay">
+    <div class="pomo-card">
+      <div class="label">Focus session</div>
       <div class="time" id="pomoTime">25:00</div>
       <div class="controls">
-        <button id="pomoReset">重置</button>
-        <button id="pomoToggle" class="primary">开始</button>
+        <button id="pomoReset">Reset</button>
+        <button id="pomoToggle" class="primary">Start</button>
       </div>
     </div>
   </div>
 
-  <div class="toast" id="toast">已添加</div>
+  <div class="toast" id="toast">Added</div>
 
   <script>
-    // ============================================================
-    // Today · Web Edition v2
-    // ============================================================
-
-    const STORAGE_KEY = 'today.tasks.v2';
-    const DATE_KEY = 'today.currentDate.v2';
-    const POMO_KEY = 'today.pomodoro.v2';
-    const SEEN_KEY = 'today.seenHint.v2';
+    /* ============================================================
+       Today v3
+       ============================================================ */
+    const STORAGE_KEY = 'today.tasks.v3';
+    const DATE_KEY = 'today.currentDate.v3';
+    const POMO_KEY = 'today.pomodoro.v3';
+    const STREAK_KEY = 'today.streak.v3';
+    const SEEN_KEY = 'today.seenHint.v3';
 
     let tasksByDate = loadTasks();
     let currentDate = loadCurrentDate();
     let pomoState = loadPomoState();
 
-    // 任务分类
+    /* Phosphor-style thin icons (inline SVG, 1.5px stroke) */
+    const ICONS = {
+      briefcase: '<svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><rect x="32" y="72" width="192" height="144" rx="8"/><path d="M168 72V48a16 16 0 0 0-16-16h-48a16 16 0 0 0-16 16v24"/><line x1="32" y1="144" x2="224" y2="144"/></svg>',
+      book: '<svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><path d="M48 216V48a8 8 0 0 1 8-8h144a8 8 0 0 1 8 8v168"/><path d="M48 216a8 8 0 0 1 8-8h144"/><line x1="80" y1="88" x2="176" y2="88"/><line x1="80" y1="120" x2="176" y2="120"/></svg>',
+      leaf: '<svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><path d="M128 224V128"/><path d="M128 128c0-30 8-56 24-72s42-24 72-24c0 30-8 56-24 72s-42 24-72 24z"/><path d="M128 128c-30 0-56-8-72-24s-24-42-24-72"/></svg>',
+      spark: '<svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><path d="M128 32v64M128 160v64M32 128h64M160 128h64M72 72l40 40M144 144l40 40M184 72l-40 40M112 144l-40 40"/></svg>',
+      clock: '<svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><circle cx="128" cy="128" r="96"/><polyline points="128 72 128 128 168 152"/></svg>',
+      check: '<polyline points="88 136 112 160 168 104" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>',
+      trash: '<svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><line x1="216" y1="56" x2="40" y2="56"/><line x1="104" y1="104" x2="104" y2="168"/><line x1="152" y1="104" x2="152" y2="168"/><path d="M200 56v152a8 8 0 0 1-8 8H64a8 8 0 0 1-8-8V56"/><path d="M168 56V40a16 16 0 0 0-16-16h-48a16 16 0 0 0-16 16v16"/></svg>',
+      bell: '<svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><path d="M56 104a72 72 0 0 1 144 0c0 35 8 53 16 64H40c8-11 16-29 16-64z"/><path d="M96 192a32 32 0 0 0 64 0"/></svg>',
+      calendar: '<svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><rect x="40" y="40" width="176" height="176" rx="8"/><line x1="176" y1="24" x2="176" y2="56"/><line x1="80" y1="24" x2="80" y2="56"/><line x1="40" y1="88" x2="216" y2="88"/><line x1="112" y1="120" x2="144" y2="120"/></svg>',
+      flame: '<svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><path d="M128 24c0 36-36 60-36 108a36 36 0 0 0 72 0c0-18-12-30-12-48s12-24 12-36"/><path d="M128 168a20 20 0 0 0 20-20"/><path d="M128 168a8 8 0 0 1-8-8"/></svg>',
+    };
+
     const CATEGORIES = {
-      work:   { icon: '💼', label: '工作' },
-      learn:  { icon: '📚', label: '学习' },
-      life:   { icon: '🌿', label: '生活' },
-      other:  { icon: '✨', label: '其他' }
+      work:  { icon: ICONS.briefcase, label: 'Work',  color: '#FFF0EB', iconColor: '#FF5733' },
+      learn: { icon: ICONS.book,      label: 'Learn', color: '#EBF4FF', iconColor: '#0066FF' },
+      life:  { icon: ICONS.leaf,      label: 'Life',  color: '#EDF7EC', iconColor: '#2B8A3E' },
+      other: { icon: ICONS.spark,     label: 'Other', color: '#F5F0FF', iconColor: '#6741D9' }
     };
 
     function autoCategory(text) {
-      if (/工作|会议|邮件|写|报告|项目|客户/.test(text)) return 'work';
-      if (/学|读|书|课|练习|背|复习|英语|编程|代码/.test(text)) return 'learn';
-      if (/吃|饭|睡|运动|跑|健|家|休息|买|玩|咖啡|茶|散步/.test(text)) return 'life';
+      if (/工作|会议|邮件|写|报告|项目|客户|deadline|公司|联系/.test(text)) return 'work';
+      if (/学|读|书|課|练习|背|复习|英语|编程|代码|course|book/.test(text)) return 'learn';
+      if (/吃|饭|睡|运动|跑|健|家|休息|买|玩|咖啡|茶|散步|gym|meditation/.test(text)) return 'life';
       return 'other';
     }
 
-    function loadTasks() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return {};
-        return JSON.parse(raw);
-      } catch { return {}; }
-    }
-    function saveTasks() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasksByDate));
-    }
-    function loadCurrentDate() {
-      const raw = localStorage.getItem(DATE_KEY);
-      if (raw) return raw;
-      return dateKey(new Date());
-    }
-    function saveCurrentDate() {
-      localStorage.setItem(DATE_KEY, currentDate);
-    }
-    function loadPomoState() {
-      try {
-        return JSON.parse(localStorage.getItem(POMO_KEY)) || { duration: 25*60, remaining: 25*60, running: false, lastTick: 0 };
-      } catch { return { duration: 25*60, remaining: 25*60, running: false, lastTick: 0 }; }
-    }
-    function savePomoState() {
-      localStorage.setItem(POMO_KEY, JSON.stringify(pomoState));
-    }
+    function loadTasks() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; } }
+    function saveTasks() { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasksByDate)); }
+    function loadCurrentDate() { return localStorage.getItem(DATE_KEY) || dateKey(new Date()); }
+    function saveCurrentDate() { localStorage.setItem(DATE_KEY, currentDate); }
+    function loadPomoState() { try { return JSON.parse(localStorage.getItem(POMO_KEY)) || { duration: 25*60, remaining: 25*60, running: false }; } catch { return { duration: 25*60, remaining: 25*60, running: false }; } }
+    function savePomoState() { localStorage.setItem(POMO_KEY, JSON.stringify(pomoState)); }
+    function loadStreak() { try { return JSON.parse(localStorage.getItem(STREAK_KEY)) || { lastDate: null, count: 0 }; } catch { return { lastDate: null, count: 0 }; } }
+    function saveStreak(s) { localStorage.setItem(STREAK_KEY, JSON.stringify(s)); }
 
-    function dateKey(d) {
-      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-    }
-    function parseDateKey(s) {
-      const [y,m,d] = s.split('-').map(Number);
-      return new Date(y, m-1, d);
-    }
+    function dateKey(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+    function parseDateKey(s) { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
     function isToday(s) { return s === dateKey(new Date()); }
-    function dayOffset(s, delta) {
-      const d = parseDateKey(s);
-      d.setDate(d.getDate() + delta);
-      return dateKey(d);
-    }
-    function weekdayCN(s) {
-      const w = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
-      return w[parseDateKey(s).getDay()];
-    }
-    function monthDayCN(s) {
-      const d = parseDateKey(s);
-      return (d.getMonth()+1) + '月' + d.getDate() + '日';
-    }
+    function dayOffset(s, d) { const x = parseDateKey(s); x.setDate(x.getDate() + d); return dateKey(x); }
 
-    // 每日寄语
-    const QUOTES = [
-      '无论今天发生什么，太阳依旧会升起 ✨',
-      '你的名字，刻在我心里 ☁️',
-      '风吹过樱花树梢，带来整个夏天 🌸',
-      '我们都是夜空中的星，彼此照亮 🌟',
-      '今天的小确幸，正在等着你 🌅',
-      '把大事化成小事，慢慢来 🍵',
-      '云的彼端，是更好的明天 🌈',
-      '每一笔记录，都是对自己的温柔 📖',
-      '做喜欢的事，就已经足够 💫',
-      '世界很大，你也很重要 🌏'
-    ];
-    function pickQuote() {
-      // 用日期作为种子
-      const s = currentDate;
-      let hash = 0;
-      for (let i = 0; i < s.length; i++) hash = (hash * 31 + s.charCodeAt(i)) | 0;
-      return QUOTES[Math.abs(hash) % QUOTES.length];
-    }
-
-    function pickGreeting() {
-      const h = new Date().getHours();
-      if (h < 6)  return '🌙 夜深了';
-      if (h < 11) return '☀️ 早安';
-      if (h < 14) return '🌤️ 午安';
-      if (h < 18) return '☕️ 下午好';
-      if (h < 22) return '🌆 晚安';
-      return '🌙 夜深了';
-    }
-
-    // ----- Render -----
+    /* === Render === */
     function render() {
-      // Date header
       const isT = isToday(currentDate);
-      document.getElementById('dateTitle').textContent = isT ? '今天' : monthDayCN(currentDate);
-      document.getElementById('dateDay').textContent = weekdayCN(currentDate);
-      document.getElementById('greeting').textContent = pickGreeting();
-      document.getElementById('dailyQuote').textContent = pickQuote();
+      const greet = pickGreeting();
+      document.getElementById('greeting').textContent = greet;
+      document.getElementById('headline').innerHTML = isT ? 'Make today<br><em>count</em>.' : 'Review <em>' + dayName(currentDate) + '</em>';
+      document.getElementById('weekday').textContent = dayName(currentDate);
+      document.getElementById('dateText').textContent = dayDate(currentDate);
 
-      // Stats card
-      const tasks = (tasksByDate[currentDate] || []).slice().sort((a,b) => a.order - b.order);
+      const tasks = (tasksByDate[currentDate] || []).slice();
+      tasks.sort((a, b) => a.order - b.order);
       const undone = tasks.filter(t => !t.done);
       const done = tasks.filter(t => t.done);
       const total = tasks.length;
       const doneCount = done.length;
       const pct = total === 0 ? 0 : Math.round(doneCount / total * 100);
 
-      const ring = document.getElementById('ringFg');
-      const circumference = 2 * Math.PI * 24;
-      ring.setAttribute('stroke-dasharray', circumference);
-      ring.setAttribute('stroke-dashoffset', circumference * (1 - pct / 100));
-      document.getElementById('ringText').textContent = pct + '%';
+      document.getElementById('pct').textContent = pct;
+      document.getElementById('heroSub').textContent =
+        total === 0 ? '开始新的一天' :
+        pct === 100 ? 'All done · 干得漂亮' :
+        pct >= 50 ? 'Continuing strong' : '起步阶段';
+      document.getElementById('taskCount').innerHTML = total + '<small>项</small>';
+      document.getElementById('taskDelta').textContent = undone.length === 0 && total > 0 ? '已全部完成' : (total === 0 ? '添加开始' : undone.length + ' 项进行中');
+      document.getElementById('taskDelta').className = 'delta ' + (undone.length === 0 && total > 0 ? 'neutral' : '');
 
-      const titles = ['开始你的一天 ✨', '继续加油 💪', '过半啦 🎉', '差不多完成 🌟', '完美收官 🎊'];
-      const sub = total === 0 ? '还没有任务' : `${doneCount} / ${total} 已完成`;
-      const subClass = pct === 100 && total > 0 ? '<span style="color:#FF7B7B">🎉 全部完成！</span>' :
-                       pct >= 50 ? '<span style="color:#FF7B7B">过半了</span>' :
-                       pct > 0 ? '<span style="color:#FF7B7B">已开张</span>' : '';
-      document.getElementById('statsTitle').innerHTML = titles[Math.min(Math.floor(pct/25), 4)];
-      document.getElementById('statsSub').innerHTML = subClass || sub;
+      // Streak
+      const streak = computeStreak();
+      document.getElementById('streakCount').innerHTML = streak.count + '<small>天</small>';
+      document.getElementById('streakDelta').textContent = streak.count > 0 ? '保持节奏' : '开始你的连胜';
+      document.getElementById('streakDelta').className = 'delta ' + (streak.count === 0 ? 'neutral' : '');
 
       // List
       const list = document.getElementById('taskList');
       const empty = document.getElementById('emptyState');
-
-      if (total === 0) {
-        list.innerHTML = '';
-        empty.classList.remove('hidden');
-        return;
-      }
+      if (total === 0) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
       empty.classList.add('hidden');
 
       let html = '';
       if (undone.length > 0) {
-        html += `<div class="section-label">进行中 <span class="count">${undone.length}</span></div>`;
-        for (const t of undone) {
-          html += renderCard(t);
-        }
+        html += `<div class="section-label"><span class="label">To do</span><span class="count">${undone.length}</span></div>`;
+        undone.forEach(t => html += renderCard(t));
       }
       if (done.length > 0) {
-        html += `<div class="section-label divider"><span class="label-text">已完成 ${done.length}</span></div>`;
-        const doneSorted = done.sort((a,b) => (b.doneAt || 0) - (a.doneAt || 0));
-        for (const t of doneSorted) {
-          html += renderCard(t);
-        }
+        html += `<div class="section-label"><span class="label">Done</span><span class="count">${done.length}</span></div>`;
+        done.sort((a,b) => (b.doneAt||0) - (a.doneAt||0)).forEach(t => html += renderCard(t));
       }
       list.innerHTML = html;
       attachCardHandlers();
@@ -949,68 +845,101 @@
 
     function renderCard(t) {
       const cat = CATEGORIES[t.category] || CATEGORIES.other;
-      const timeStr = t.doneAt ? formatTimeAgo(t.doneAt) : (t.createdAt ? formatTimeAgo(t.createdAt) : '');
+      const ago = t.doneAt ? formatTimeAgo(t.doneAt) : (t.createdAt ? formatTimeAgo(t.createdAt) : '');
       return `
         <div class="task-card ${t.done ? 'done' : ''}" data-id="${t.id}">
-          <div class="task-icon ${t.category || 'other'}">${cat.icon}</div>
-          <div class="task-content">
+          <div class="icon ${t.category||'other'}" style="background:${cat.color};color:${cat.iconColor}">${cat.icon}</div>
+          <div class="body">
             <div class="text">${escapeHtml(t.text)}</div>
-            ${timeStr ? `<div class="meta"><span class="time">⏱ ${timeStr}</span></div>` : ''}
+            <div class="meta">
+              <span class="tag">${cat.label}</span>
+              ${ago ? `<span style="display:inline-flex;align-items:center;gap:3px">${ICONS.clock}<span>${ago}</span></span>` : ''}
+            </div>
           </div>
-          <div class="check-circle">
-            <svg viewBox="0 0 14 14"><path d="M2 7 L6 11 L12 3"/></svg>
-          </div>
-          <button class="delete-btn" data-action="delete">✕</button>
+          <div class="check">${ICONS.check}</div>
+          <button class="delete-btn" aria-label="删除">${ICONS.trash}</button>
         </div>
       `;
     }
 
     function formatTimeAgo(ts) {
-      const diff = Math.floor((Date.now() - ts) / 60000);
-      if (diff < 1) return '刚刚';
-      if (diff < 60) return diff + '分钟前';
-      if (diff < 60*24) return Math.floor(diff/60) + '小时前';
-      return Math.floor(diff/60/24) + '天前';
+      const d = Math.floor((Date.now() - ts) / 60000);
+      if (d < 1) return 'just now';
+      if (d < 60) return d + 'm ago';
+      if (d < 60*24) return Math.floor(d/60) + 'h ago';
+      return Math.floor(d/60/24) + 'd ago';
     }
 
-    function escapeHtml(s) {
-      return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    function pickGreeting() {
+      const h = new Date().getHours();
+      if (h < 5)  return 'Still up?';
+      if (h < 11) return 'Good morning';
+      if (h < 14) return 'Good afternoon';
+      if (h < 18) return 'Good afternoon';
+      if (h < 22) return 'Good evening';
+      return 'Late night';
+    }
+    function dayName(s) {
+      const w = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      return w[parseDateKey(s).getDay()];
+    }
+    function dayDate(s) {
+      const m = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      const d = parseDateKey(s);
+      return m[d.getMonth()] + ' ' + d.getDate();
     }
 
-    // ----- Add task -----
+    function computeStreak() {
+      const streak = loadStreak();
+      const today = dateKey(new Date());
+      if (streak.lastDate === today) return streak;
+      // Check if user completed at least one task today
+      const todaysTasks = tasksByDate[today] || [];
+      const completedToday = todaysTasks.some(t => t.done);
+      if (!completedToday) {
+        if (streak.lastDate === dayOffset(today, -1)) return streak;
+        return { lastDate: null, count: 0 };
+      }
+      // Today is completed; update streak
+      const yesterday = dayOffset(today, -1);
+      const yCompleted = (tasksByDate[yesterday] || []).some(t => t.done);
+      const newCount = streak.lastDate === yesterday ? streak.count + 1 : 1;
+      const newStreak = { lastDate: today, count: newCount };
+      saveStreak(newStreak);
+      return newStreak;
+    }
+
+    /* === Add task === */
     const inputEl = document.getElementById('taskInput');
     const submitBtn = document.getElementById('submitBtn');
-    const inputBar = document.getElementById('inputBar');
+    const composer = document.getElementById('composer');
 
-    function updateSubmitBtn() {
-      submitBtn.disabled = inputEl.value.trim().length === 0;
-    }
-    inputEl.addEventListener('input', updateSubmitBtn);
-    inputEl.addEventListener('focus', () => inputBar.classList.add('focused'));
-    inputEl.addEventListener('blur', () => inputBar.classList.remove('focused'));
+    function updateSubmit() { submitBtn.disabled = inputEl.value.trim().length === 0; }
+    inputEl.addEventListener('input', updateSubmit);
+    inputEl.addEventListener('focus', () => composer.classList.add('focused'));
+    inputEl.addEventListener('blur', () => composer.classList.remove('focused'));
     inputEl.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !submitBtn.disabled) {
         e.preventDefault();
         addTask(inputEl.value);
-        inputEl.value = '';
-        updateSubmitBtn();
+        inputEl.value = ''; updateSubmit();
       }
     });
     submitBtn.addEventListener('click', () => {
       if (submitBtn.disabled) return;
       addTask(inputEl.value);
-      inputEl.value = '';
-      updateSubmitBtn();
+      inputEl.value = ''; updateSubmit();
       inputEl.focus();
     });
 
     function addTask(text) {
-      const t = text.trim();
-      if (!t) return;
+      const t = text.trim(); if (!t) return;
       const tasks = tasksByDate[currentDate] || [];
       const maxOrder = tasks.reduce((m, x) => Math.max(m, x.order), -1);
       const item = {
-        id: 't' + Date.now() + Math.random().toString(36).slice(2, 7),
+        id: 't' + Date.now() + Math.random().toString(36).slice(2,7),
         text: t,
         done: false,
         order: maxOrder + 1,
@@ -1019,38 +948,30 @@
         doneAt: null
       };
       tasksByDate[currentDate] = [...tasks, item];
-      saveTasks();
-      render();
-      showToast('已添加 ✨');
+      saveTasks(); render();
+      showToast('Added');
     }
 
-    // ----- Row interactions -----
+    /* === Row interactions === */
     function attachCardHandlers() {
-      const cards = document.querySelectorAll('.task-card');
-      cards.forEach(card => {
+      document.querySelectorAll('.task-card').forEach(card => {
         const id = card.dataset.id;
         card.addEventListener('click', (e) => {
           if (e.target.closest('.delete-btn')) return;
           toggleTask(id);
         });
-        const del = card.querySelector('.delete-btn');
-        del.addEventListener('click', (e) => {
+        card.querySelector('.delete-btn').addEventListener('click', (e) => {
           e.stopPropagation();
           deleteTask(id, card);
         });
-
-        // Touch swipe
-        let sx=0, sy=0, cx=0, sw=false;
-        card.addEventListener('touchstart', (e) => {
-          sx = e.touches[0].clientX; sy = e.touches[0].clientY; cx=0; sw=false;
-        }, { passive: true });
+        let sx=0,sy=0,cx=0,sw=false;
+        card.addEventListener('touchstart', (e) => { sx=e.touches[0].clientX; sy=e.touches[0].clientY; cx=0; sw=false; }, { passive: true });
         card.addEventListener('touchmove', (e) => {
           cx = e.touches[0].clientX - sx;
           const dy = Math.abs(e.touches[0].clientY - sy);
           if (Math.abs(cx) > 8 && dy < 30) {
-            sw = true;
-            card.classList.add('swiping');
-            card.style.setProperty('--swipe-x', Math.min(0, cx) + 'px');
+            sw = true; card.classList.add('swiping');
+            card.style.setProperty('--swipe-x', Math.min(0,cx) + 'px');
           }
         }, { passive: true });
         card.addEventListener('touchend', () => {
@@ -1074,170 +995,151 @@
       if (t.done) {
         const maxOrder = tasks.reduce((m, x) => Math.max(m, x.order), -1);
         t.order = maxOrder + 1;
-        showToast('做完了！🎉');
+        showToast('Nicely done');
       }
       tasksByDate[currentDate] = tasks;
-      saveTasks();
-      render();
+      saveTasks(); render();
     }
 
     function deleteTask(id, cardEl) {
-      if (cardEl) {
-        cardEl.classList.add('removing');
-        setTimeout(() => {
-          const tasks = (tasksByDate[currentDate] || []).filter(t => t.id !== id);
-          tasksByDate[currentDate] = tasks;
-          saveTasks();
-          render();
-          showToast('已删除');
-        }, 280);
-      } else {
+      const finish = () => {
         const tasks = (tasksByDate[currentDate] || []).filter(t => t.id !== id);
         tasksByDate[currentDate] = tasks;
-        saveTasks();
-        render();
-      }
+        saveTasks(); render();
+        showToast('Removed');
+      };
+      if (cardEl) { cardEl.classList.add('removing'); setTimeout(finish, 280); }
+      else finish();
     }
 
-    // ----- Date navigation -----
+    /* === Date navigation === */
     function gotoDate(s, dir) {
-      currentDate = s;
-      saveCurrentDate();
+      currentDate = s; saveCurrentDate();
       const list = document.getElementById('listArea');
-      list.classList.remove('day-transition','day-transition-back');
+      list.classList.remove('day-in', 'day-out');
       void list.offsetWidth;
-      list.classList.add(dir > 0 ? 'day-transition' : 'day-transition-back');
+      list.classList.add(dir > 0 ? 'day-in' : 'day-out');
       render();
     }
     document.getElementById('prevBtn').addEventListener('click', () => gotoDate(dayOffset(currentDate, -1), -1));
     document.getElementById('nextBtn').addEventListener('click', () => gotoDate(dayOffset(currentDate, 1), 1));
 
-    let touchSX=0, touchSY=0, drag=false;
+    let tsx=0, tsy=0, drag=false;
     const listArea = document.getElementById('listArea');
-    listArea.addEventListener('touchstart', (e) => {
-      touchSX = e.touches[0].clientX; touchSY = e.touches[0].clientY; drag=false;
-    }, { passive: true });
+    listArea.addEventListener('touchstart', (e) => { tsx=e.touches[0].clientX; tsy=e.touches[0].clientY; drag=false; }, { passive: true });
     listArea.addEventListener('touchmove', (e) => {
-      const dx = e.touches[0].clientX - touchSX;
-      const dy = Math.abs(e.touches[0].clientY - touchSY);
+      const dx = e.touches[0].clientX - tsx;
+      const dy = Math.abs(e.touches[0].clientY - tsy);
       if (Math.abs(dx) > 30 && dy < 30) drag = true;
     }, { passive: true });
     listArea.addEventListener('touchend', (e) => {
       if (!drag) return;
-      const dx = e.changedTouches[0].clientX - touchSX;
+      const dx = e.changedTouches[0].clientX - tsx;
       if (Math.abs(dx) > 50) {
         if (dx > 0) gotoDate(dayOffset(currentDate, -1), -1);
         else gotoDate(dayOffset(currentDate, 1), 1);
       }
       drag = false;
     });
-
-    let mouseSX = 0, mouseDrag = false;
-    listArea.addEventListener('mousedown', (e) => { if (e.button===0) { mouseSX = e.clientX; mouseDrag = true; } });
+    let msx = 0, mdrag = false;
+    listArea.addEventListener('mousedown', (e) => { if (e.button===0) { msx = e.clientX; mdrag = true; } });
     document.addEventListener('mousemove', (e) => {
-      if (!mouseDrag) return;
-      const dx = e.clientX - mouseSX;
+      if (!mdrag) return;
+      const dx = e.clientX - msx;
       if (Math.abs(dx) > 80) {
         if (dx > 0) gotoDate(dayOffset(currentDate, -1), -1);
         else gotoDate(dayOffset(currentDate, 1), 1);
-        mouseSX = e.clientX;
+        msx = e.clientX;
       }
     });
-    document.addEventListener('mouseup', () => { mouseDrag = false; });
-
-    // Keyboard navigation
+    document.addEventListener('mouseup', () => { mdrag = false; });
     document.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT') return;
       if (e.key === 'ArrowLeft') gotoDate(dayOffset(currentDate, -1), -1);
       else if (e.key === 'ArrowRight') gotoDate(dayOffset(currentDate, 1), 1);
     });
 
-    // ----- Pomodoro -----
-    const pomoModal = document.getElementById('pomoModal');
+    /* === Pomodoro === */
+    const pomoOverlay = document.getElementById('pomoOverlay');
     const pomoTime = document.getElementById('pomoTime');
     const pomoToggle = document.getElementById('pomoToggle');
     const pomoReset = document.getElementById('pomoReset');
-    const pomoBtn = document.getElementById('pomoBtn');
 
-    function renderPomoTime() {
+    function renderPomo() {
       const m = Math.floor(pomoState.remaining / 60);
       const s = pomoState.remaining % 60;
-      pomoTime.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+      pomoTime.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
     }
-    pomoBtn.addEventListener('click', () => pomoModal.classList.add('show'));
-    pomoModal.addEventListener('click', (e) => { if (e.target === pomoModal) pomoModal.classList.remove('show'); });
+    // Tap on the hero card to open pomodoro
+    document.querySelector('.bento .hero').addEventListener('click', () => pomoOverlay.classList.add('show'));
+    pomoOverlay.addEventListener('click', (e) => { if (e.target === pomoOverlay) pomoOverlay.classList.remove('show'); });
     pomoToggle.addEventListener('click', () => {
       pomoState.running = !pomoState.running;
-      pomoState.lastTick = Date.now();
       savePomoState();
-      pomoToggle.textContent = pomoState.running ? '暂停' : '开始';
+      pomoToggle.textContent = pomoState.running ? 'Pause' : 'Start';
     });
     pomoReset.addEventListener('click', () => {
       pomoState.running = false;
       pomoState.remaining = pomoState.duration;
       savePomoState();
-      renderPomoTime();
-      pomoToggle.textContent = '开始';
+      renderPomo();
+      pomoToggle.textContent = 'Start';
     });
-
     setInterval(() => {
       if (!pomoState.running) return;
       pomoState.remaining = Math.max(0, pomoState.remaining - 1);
       savePomoState();
-      renderPomoTime();
+      renderPomo();
       if (pomoState.remaining === 0) {
         pomoState.running = false;
-        pomoToggle.textContent = '开始';
+        pomoToggle.textContent = 'Start';
         pomoState.remaining = pomoState.duration;
         savePomoState();
-        showToast('🍅 番茄钟完成！休息一下吧');
-        try { new AudioContext().resume(); } catch(e) {}
-        pomoModal.classList.remove('show');
+        showToast('Focus complete — take a break');
+        pomoOverlay.classList.remove('show');
       }
     }, 1000);
-    renderPomoTime();
-    pomoToggle.textContent = pomoState.running ? '暂停' : '开始';
+    renderPomo();
+    pomoToggle.textContent = pomoState.running ? 'Pause' : 'Start';
 
-    // ----- Toast -----
+    /* === Toast === */
     let toastTimer = null;
     function showToast(msg) {
       const el = document.getElementById('toast');
       el.textContent = msg;
       el.classList.add('show');
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 1600);
     }
 
-    // ----- Status bar time -----
+    /* === Status bar time === */
     function updateTime() {
       const d = new Date();
       document.getElementById('time').textContent = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+      document.getElementById('timeText').textContent = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
     }
     setInterval(updateTime, 30000);
     updateTime();
 
-    // ----- First-time hint -----
+    /* === First-time hint === */
     if (!localStorage.getItem(SEEN_KEY)) {
       const hint = document.getElementById('hint');
       setTimeout(() => {
         hint.classList.add('show');
-        setTimeout(() => {
-          hint.classList.remove('show');
-          localStorage.setItem(SEEN_KEY, '1');
-        }, 4500);
-      }, 800);
+        setTimeout(() => { hint.classList.remove('show'); localStorage.setItem(SEEN_KEY, '1'); }, 5000);
+      }, 1200);
     }
 
-    // ----- Seed sample data on first visit -----
+    /* === Seed sample data === */
     if (Object.keys(tasksByDate).length === 0) {
       const today = dateKey(new Date());
       tasksByDate[today] = [
-        { id: 's1', text: '晨跑 30 分钟', done: false, order: 0, category: 'life', createdAt: Date.now()-3600000, doneAt: null },
-        { id: 's2', text: '完成项目周报', done: false, order: 1, category: 'work', createdAt: Date.now()-1800000, doneAt: null },
-        { id: 's3', text: '复习英语单词 100 个', done: false, order: 2, category: 'learn', createdAt: Date.now()-900000, doneAt: null },
-        { id: 's4', text: '回复客户邮件', done: false, order: 3, category: 'work', createdAt: Date.now()-600000, doneAt: null },
-        { id: 's5', text: '买一杯咖啡', done: true, order: 4, category: 'life', createdAt: Date.now()-7200000, doneAt: Date.now()-3600000 },
-        { id: 's6', text: '读 30 分钟书', done: true, order: 5, category: 'learn', createdAt: Date.now()-5400000, doneAt: Date.now()-1800000 }
+        { id: 's1', text: '晨跑 30 分钟', done: true,  order: 0, category: 'life',  createdAt: Date.now()-7200000, doneAt: Date.now()-3600000 },
+        { id: 's2', text: '完成项目周报',   done: false, order: 1, category: 'work',  createdAt: Date.now()-1800000, doneAt: null },
+        { id: 's3', text: '复习英语单词',   done: false, order: 2, category: 'learn', createdAt: Date.now()-900000,  doneAt: null },
+        { id: 's4', text: '回复客户邮件',   done: false, order: 3, category: 'work',  createdAt: Date.now()-600000,  doneAt: null },
+        { id: 's5', text: '买一杯咖啡',     done: true,  order: 4, category: 'life',  createdAt: Date.now()-5400000, doneAt: Date.now()-1800000 },
+        { id: 's6', text: '读 30 分钟书',   done: true,  order: 5, category: 'learn', createdAt: Date.now()-4800000, doneAt: Date.now()-2400000 }
       ];
       saveTasks();
     }
