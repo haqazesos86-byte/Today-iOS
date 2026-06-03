@@ -330,16 +330,18 @@ jobs:
 
           # Try these device types in order (newer ones may not exist on old Xcode)
           declare -A DEVICES=(
-            ["6.7"]="com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max"
-            ["6.5"]="com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro"
-            ["5.5"]="com.apple.CoreSimulator.SimDeviceType.iPhone-8-Plus"
+            ["size_67"]="com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max:6.7"
+            ["size_65"]="com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro:6.5"
+            ["size_55"]="com.apple.CoreSimulator.SimDeviceType.iPhone-8-Plus:5.5"
           )
 
           SCENARIOS=("1" "2" "3")
 
-          for SIZE in "6.7" "6.5" "5.5"; do
-            DEV_TYPE="${DEVICES[$SIZE]}"
-            echo "📱 Trying $SIZE\" with $DEV_TYPE"
+          for SIZE in "size_67" "size_65" "size_55"; do
+            ENTRY="${DEVICES[$SIZE]}"
+            DEV_TYPE="${ENTRY%:*}"          # device type before colon
+            DISPLAY_SIZE="${ENTRY##*:}"     # display size after colon
+            echo "📱 Trying $DISPLAY_SIZE\" with $DEV_TYPE"
 
             # Try to create, fall back to existing
             DEVICE=$(xcrun simctl create "Today-$SIZE" "$DEV_TYPE" "$RUNTIME" 2>/dev/null || echo "")
@@ -355,7 +357,7 @@ jobs:
               DEVICE=$(xcrun simctl list devices available | grep -E "iPhone" | head -1 | grep -oE '\([A-F0-9-]{36}\)' | tr -d '()')
             fi
             if [ -z "$DEVICE" ]; then
-              echo "  ⚠️ No device available, skipping $SIZE\""
+              echo "  ⚠️ No device available, skipping $DISPLAY_SIZE\""
               continue
             fi
             echo "  Using device: $DEVICE"
@@ -383,7 +385,7 @@ jobs:
               SIMCTL_CHILD_SEED_SAMPLE_DATA=$SCENARIO xcrun simctl launch "$DEVICE" com.today.app 2>&1 | head -1
               sleep 8
 
-              OUT="app-store-screenshots/${SIZE}-${NAME}.png"
+              OUT="app-store-screenshots/${DISPLAY_SIZE}-${NAME}.png"
               xcrun simctl io "$DEVICE" screenshot --type=png --mask=ignored "$OUT" 2>/dev/null
               if [ -f "$OUT" ]; then
                 echo "  ✅ $OUT captured"
