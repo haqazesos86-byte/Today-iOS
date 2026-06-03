@@ -41,7 +41,61 @@ jobs:
               cat build.log
               exit 1
             }
-          echo "✅ Build succeeded"
+          echo "✅ Simulator build succeeded"
+
+      - name: Build for iOS Device (iphoneos, unsigned)
+        run: |
+          set -o pipefail
+          # Unsigned build for iphoneos — used to validate code compiles for real device.
+          # For signed App Store / TestFlight builds, see store-upload job below (requires
+          # APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_KEY_CONTENT, APPLE_KEY_ISSUER_ID secrets).
+          xcodebuild build \
+            -project "Today.xcodeproj" \
+            -scheme "Today" \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath "${{ github.workspace }}/build/Today.xcarchive" \
+            archive \
+            ASSETCATALOG_COMPILER_APPICON_NAME="" \
+            ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME="" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO 2>&1 | tee build-release.log | xcpretty || {
+              echo "❌ Device build failed. Full log:"
+              cat build-release.log
+              exit 1
+            }
+          echo "✅ Device archive created at build/Today.xcarchive"
+          ls -la build/
+
+      - name: Export IPA (unsigned, ad-hoc style)
+        run: |
+          # Create a minimal export options plist for unsigned IPA export
+          cat > ExportOptions.plist << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>development</string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>stripSwiftSymbols</key>
+              <true/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "build/Today.xcarchive" \
+            -exportPath "build/" \
+            -exportOptionsPlist "ExportOptions.plist" 2>&1 | tail -20 || echo "Export may need signing identity"
+          ls -la build/ 2>/dev/null
+          if [ -f "build/Today.ipa" ]; then
+            echo "✅ IPA created: build/Today.ipa"
+          else
+            echo "⚠️ IPA not created (expected without signing certs) — archive is at build/Today.xcarchive"
+          fi
 
       - name: Locate built app bundle
         id: locate
@@ -257,6 +311,93 @@ jobs:
           HTML
           echo "✅ Preview HTML generated"
 
+      - name: Generate App Store screenshots (multiple device sizes)
+        continue-on-error: true
+        run: |
+          cd "${{ github.workspace }}"
+          mkdir -p app-store-screenshots
+
+          RUNTIME=$(xcrun simctl list runtimes available | grep -oE 'com\.apple\.CoreSimulator\.SimRuntime\.iOS-[0-9-]+' | head -1)
+          if [ -z "$RUNTIME" ]; then
+            RUNTIME="com.apple.CoreSimulator.SimRuntime.iOS-18-4"
+          fi
+
+          declare -A DEVICES=(
+            ["6.5"]="com.apple.CoreSimulator.SimDeviceType.iPhone-11-Pro-Max"
+            ["6.7"]="com.apple.CoreSimulator.SimDeviceType.iPhone-14-Pro-Max"
+            ["5.5"]="com.apple.CoreSimulator.SimDeviceType.iPhone-8-Plus"
+          )
+
+          SCENARIOS=("1" "2" "3")
+
+          for SIZE in "6.5" "6.7" "5.5"; do
+            DEV_TYPE="${DEVICES[$SIZE]}"
+            echo "📱 Capturing $SIZE\" ($DEV_TYPE)"
+
+            DEVICE=$(xcrun simctl create "Today-$SIZE" "$DEV_TYPE" "$RUNTIME" 2>/dev/null || echo "")
+            if [ -z "$DEVICE" ]; then
+              DEVICE=$(xcrun simctl list devices available | grep -E "iPhone.*($SIZE|Pro)" | head -1 | grep -oE '\([A-F0-9-]{36}\)' | tr -d '()')
+            fi
+            if [ -z "$DEVICE" ]; then
+              echo "  ⚠️ No device found for $SIZE\", skipping"
+              continue
+            fi
+
+            xcrun simctl boot "$DEVICE" 2>/dev/null || true
+            for i in 1 2 3 4 5 6 7 8; do
+              if xcrun simctl list devices | grep "$DEVICE" | grep -q "(Booted)"; then
+                break
+              fi
+              sleep 3
+            done
+
+            for SCENARIO in "${SCENARIOS[@]}"; do
+              xcrun simctl terminate "$DEVICE" com.today.app 2>/dev/null || true
+              xcrun simctl uninstall "$DEVICE" com.today.app 2>/dev/null || true
+              xcrun simctl install "$DEVICE" "$APP_PATH" 2>&1 | head -1
+
+              case $SCENARIO in
+                1) NAME="FullList" ;;
+                2) NAME="Minimal" ;;
+                3) NAME="Empty" ;;
+              esac
+
+              SIMCTL_CHILD_SEED_SAMPLE_DATA=$SCENARIO xcrun simctl launch "$DEVICE" com.today.app 2>&1 | head -1
+              sleep 8
+
+              OUT="app-store-screenshots/${SIZE}-${NAME}.png"
+              xcrun simctl io "$DEVICE" screenshot --type=png --mask=ignored "$OUT" 2>/dev/null
+              if [ -f "$OUT" ]; then
+                echo "  ✅ $OUT"
+              else
+                echo "  ⚠️ Failed: $OUT"
+              fi
+            done
+
+            xcrun simctl shutdown "$DEVICE" 2>/dev/null || true
+            xcrun simctl delete "$DEVICE" 2>/dev/null || true
+          done
+
+          # Resize to exact App Store dimensions using sips
+          for f in app-store-screenshots/*.png; do
+            [ -f "$f" ] || continue
+            case "$(basename "$f" .png)" in
+              6.5-*) DIM="1242 2688" ;;
+              6.7-*) DIM="1290 2796" ;;
+              5.5-*) DIM="1242 2208" ;;
+              *) continue ;;
+            esac
+            W=$(echo $DIM | cut -d' ' -f1)
+            H=$(echo $DIM | cut -d' ' -f2)
+            sips -z "$H" "$W" "$f" --out "${f%.png}-resized.png" 2>/dev/null
+            if [ -f "${f%.png}-resized.png" ]; then
+              rm "$f"
+              echo "  Resized: $(basename $f) → ${W}×${H}"
+            fi
+          done
+
+          ls -la app-store-screenshots/
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -268,6 +409,7 @@ jobs:
             ${{ github.workspace }}/Screenshot_03_NextDay.png
             ${{ github.workspace }}/Today_Video.mov
             ${{ github.workspace }}/preview.html
+            ${{ github.workspace }}/app-store-screenshots/
           if-no-files-found: warn
           retention-days: 30
 
@@ -288,6 +430,44 @@ jobs:
           path: ${{ github.workspace }}/artifacts/Today.app
           if-no-files-found: warn
           retention-days: 30
+
+  store-upload:
+    name: Upload to TestFlight / App Store Connect
+    # Only runs when user has configured Apple credentials as GitHub Secrets
+    runs-on: macos-latest
+    needs: build
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.upload_to_store == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Import App Store Connect API Key
+        env:
+          API_KEY_BASE64: ${{ secrets.APPLE_KEY_CONTENT }}
+        run: |
+          mkdir -p ~/private_keys
+          echo "$API_KEY_BASE64" | base64 --decode > ~/private_keys/AuthKey_${{ secrets.APPLE_KEY_ID }}.p8
+          ls -la ~/private_keys/
+
+      - name: Configure signing (if certs provided)
+        if: ${{ secrets.APPLE_TEAM_ID != '' }}
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          echo "Team ID: $APPLE_TEAM_ID"
+          # Update project to use this team
+          # This is a placeholder — actual signing setup requires more configuration
+
+      - name: Build & upload via xcodebuild (placeholder)
+        if: ${{ env.READY_TO_UPLOAD == 'true' }}
+        run: |
+          echo "⚠️ Upload step requires manual configuration with your Apple Developer credentials"
+          echo "Required secrets: APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_KEY_CONTENT, APPLE_KEY_ISSUER_ID"
+          echo "Once provided, set workflow_dispatch input 'upload_to_store=true' to trigger"
 
   check-code:
     name: Swift Syntax Check

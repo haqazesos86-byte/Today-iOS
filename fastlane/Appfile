@@ -1,0 +1,7 @@
+# Appfile — fastlane configuration
+# Maps bundle ID to Apple Developer team
+
+app_identifier("com.today.app")
+apple_id(ENV["APPLE_ID"] || "user@example.com")  # Replace with your Apple ID
+team_id(ENV["APPLE_TEAM_ID"] || "ABCDE12345")     # Replace with your Team ID
+itc_team_id(ENV["APPLE_ITC_TEAM_ID"] || "12345") # App Store Connect team ID

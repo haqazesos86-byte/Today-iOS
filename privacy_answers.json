@@ -1,0 +1,106 @@
+{
+  "privacyAnswers": {
+    "section1": {
+      "name": "Data Collection",
+      "answers": {
+        "contactInfo": {
+          "collected": false,
+          "usedForTracking": false,
+          "linkedToUser": false
+        },
+        "financialInfo": {
+          "collected": false,
+          "usedForTracking": false,
+          "linkedToUser": false
+        },
+        "healthAndFitness": {
+          "collected": false,
+          "usedForTracking": false,
+          "linkedToUser": false
+        },
+        "location": {
+          "collected": false,
+          "usedForTracking": false,
+          "linkedToUser": false
+        },
+        "sensitiveInfo": {
+          "collected": false,
+          "usedForTracking": false,
+          "linkedToUser": false
+        },
+        "contacts": {
+          "collected": false,
+          "usedForTracking": false,
+          "linkedToUser": false
+        },
+        "userContent": {
+          "collected": false,
+          "usedForTracking": false,
+          "linkedToUser": false,
+          "notes": "Tasks are stored locally on device and optional iCloud (user's own account). Not collected by developer."
+        },
+        "browsingHistory": {
+          "collected": false,
+          "usedForTracking": false,
+          "linkedToUser": false
+        },
+        "searchHistory": {
+          "collected": false,
+          "usedForTracking": false,
+          "linkedToUser": false
+        },
+        "identifiers": {
+          "collected": false,
+          "usedForTracking": false,
+          "linkedToUser": false
+        },
+        "usageData": {
+          "collected": false,
+          "usedForTracking": false,
+          "linkedToUser": false
+        },
+        "diagnostics": {
+          "collected": false,
+          "usedForTracking": false,
+          "linkedToUser": false
+        },
+        "purchases": {
+          "collected": false,
+          "usedForTracking": false,
+          "linkedToUser": false
+        },
+        "locationData": {
+          "collected": false,
+          "usedForTracking": false,
+          "linkedToUser": false
+        }
+      }
+    },
+    "section2": {
+      "name": "Data Usage",
+      "answers": {
+        "thirdPartyAdvertising": false,
+        "developersAdvertising": false,
+        "analytics": false,
+        "productPersonalization": false,
+        "appFunctionality": true,
+        "notes": "App functionality: tasks are stored locally and synced via user's iCloud (if enabled). No data sent to developer's servers."
+      }
+    },
+    "section3": {
+      "name": "Data Not Linked to You",
+      "dataTypes": []
+    },
+    "section4": {
+      "name": "Data Used to Track You",
+      "dataTypes": []
+    }
+  },
+  "generatedAt": "2026-06-03",
+  "summary": "App does NOT collect any data. All task data is stored locally on user's device with optional iCloud sync (user-controlled). No third-party SDKs, no analytics, no tracking.",
+  "submissionNotes": [
+    "All data type answers are 'No, we do not collect this data'",
+    "Only 'App Functionality' is selected in Data Usage because tasks are stored locally and synced via user's own iCloud",
+    "If App Review asks: iCloud sync is via Apple's CloudKit framework and only syncs to the user's own iCloud account - developer has no access"
+  ]
+}
